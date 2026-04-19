@@ -1,1 +1,182 @@
-<h1>welcome to the main page</h1>
+<!-- Dashboard Container -->
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="logo">
+        <span class="logo-icon">📄</span>
+        <h1>ResumeAI</h1>
+      </div>
+
+      <!-- Main Actions -->
+      <div class="main-actions">
+        <button class="action-btn create-btn" (click)="createResume()">
+          <span class="btn-icon">+</span> Create Resume
+        </button>
+        <button class="action-btn upload-btn" (click)="uploadResume()">
+          <span class="btn-icon">⬆️</span> Upload Resume
+        </button>
+        <button class="action-btn ats-btn" (click)="performAtsCheck('current')" [disabled]="isProcessing">
+          <span class="btn-icon">✓</span> ATS Check
+        </button>
+      </div>
+
+      <!-- Profile Dropdown -->
+      <div class="profile-section">
+        <button class="profile-btn" (click)="toggleProfileDropdown()">
+          <span class="profile-icon">👤</span>
+          <span class="profile-name">{{ userProfile?.name || 'User' }}</span>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div *ngIf="showProfileDropdown" class="dropdown-menu">
+          <div class="dropdown-header">
+            <span>{{ userProfile?.email }}</span>
+            <span *ngIf="userPlan === 'pro'" class="pro-badge">PRO</span>
+            <span *ngIf="userPlan === 'free'" class="free-badge">FREE</span>
+          </div>
+
+          <div class="dropdown-items">
+            <button class="dropdown-item" (click)="viewProfile()">
+              👤 View Profile
+            </button>
+            <button 
+              *ngIf="userPlan === 'free'" 
+              class="dropdown-item upgrade-item" 
+              (click)="upgradeProfile()">
+              ⭐ Upgrade to Pro
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item logout-item" (click)="logout()">
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="dashboard-main">
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+      <h2>Welcome back, {{ userProfile?.name || 'User' }}! 👋</h2>
+      <p>
+        <span *ngIf="userPlan === 'free'">You're on the <strong>Free Plan</strong>. <a href="#" (click)="upgradeProfile()">Upgrade to Pro</a> to unlock premium templates.</span>
+        <span *ngIf="userPlan === 'pro'">You're on the <strong>Pro Plan</strong>. Enjoy all premium features! ⭐</span>
+      </p>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="quick-stats">
+      <div class="stat-card">
+        <div class="stat-icon">📄</div>
+        <div class="stat-info">
+          <div class="stat-label">Total Resumes</div>
+          <div class="stat-value">{{ userResumes.length }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎨</div>
+        <div class="stat-info">
+          <div class="stat-label">Templates Available</div>
+          <div class="stat-value">{{ userPlan === 'pro' ? '30+' : '5' }}</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-info">
+          <div class="stat-label">Plan Status</div>
+          <div class="stat-value">{{ userPlan === 'pro' ? 'Pro' : 'Free' }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Resumes Section -->
+    <section class="resumes-section">
+      <div class="section-header">
+        <h3>Your Resumes</h3>
+        <p *ngIf="userResumes.length === 0" class="empty-message">No resumes yet. Create one to get started!</p>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your resumes...</p>
+      </div>
+
+      <!-- Resumes Grid -->
+      <div *ngIf="!isLoading && userResumes.length > 0" class="resumes-grid">
+        <div *ngFor="let resume of userResumes" class="resume-card">
+          <div class="resume-preview">
+            <div class="preview-content">
+              <div class="preview-line"></div>
+              <div class="preview-line"></div>
+              <div class="preview-line short"></div>
+            </div>
+          </div>
+
+          <div class="resume-info">
+            <h4>{{ resume.title }}</h4>
+            <p class="resume-date">{{ resume.updatedAt | date: 'short' }}</p>
+          </div>
+
+          <div class="resume-actions">
+            <button class="action-small edit-btn" (click)="editResume(resume.id)" title="Edit">
+              ✏️
+            </button>
+            <button class="action-small check-btn" (click)="performAtsCheck(resume.id)" title="ATS Check">
+              ✓
+            </button>
+            <button class="action-small download-btn" (click)="downloadResume(resume.id)" title="Download">
+              ⬇️
+            </button>
+            <button class="action-small delete-btn" (click)="deleteResume(resume.id)" title="Delete">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && userResumes.length === 0" class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h4>No resumes yet</h4>
+        <p>Create a new resume or upload an existing one to get started</p>
+        <button class="btn-primary" (click)="createResume()">Create Your First Resume</button>
+      </div>
+    </section>
+
+    <!-- Templates Section (always visible) -->
+    <section class="templates-section">
+      <app-templates [showTitle]="true" [maxTemplates]="10"></app-templates>
+    </section>
+
+    <!-- Upgrade CTA (for free users) -->
+    <section *ngIf="userPlan === 'free'" class="upgrade-cta">
+      <div class="upgrade-content">
+        <div class="upgrade-icon">⭐</div>
+        <h3>Ready to unlock premium features?</h3>
+        <p>Upgrade to ResumeAI Pro and access all 30+ templates, ATS optimization, and more!</p>
+        <button class="btn-upgrade" (click)="upgradeProfile()">
+          Upgrade to Pro
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Hidden file input for upload -->
+  <input 
+    #fileInput 
+    type="file" 
+    id="fileInput" 
+    accept=".pdf,.doc,.docx" 
+    style="display: none;"
+    (change)="onFileSelected($event)">
+
+  <!-- Upload Error Message -->
+  <div *ngIf="uploadError" class="error-toast">
+    <span class="error-icon">⚠️</span>
+    {{ uploadError }}
+  </div>
+</div>
