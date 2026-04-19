@@ -1,4 +1,4 @@
-# 🚀 ResumeAI — AI-Powered Resume Builder Angular Application
+# 🚀 ResumeAI — AI-Powered Resume Builder Angular
 
 <p align="center">
   <b>Build Smarter. Apply Faster. Land the Job.</b>
