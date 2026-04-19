@@ -1,1 +1,180 @@
-<button class="btn-outline" (click)="goToLogin()">Get Started</button>
+<!-- Navigation Header -->
+<nav class="navbar">
+  <div class="navbar-content">
+    <div class="logo">
+      <span class="logo-icon">📄</span>
+      <h1>ResumeAI</h1>
+    </div>
+    <div class="navbar-actions">
+      <button *ngIf="!isLoggedIn" class="btn-login" (click)="goToLogin()">Login</button>
+      <button *ngIf="isLoggedIn" class="btn-dashboard" (click)="goToDashboard()">Dashboard</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero" @slideInUp>
+  <div class="hero-content">
+    <h1 class="hero-title">Build Your Perfect Resume with AI</h1>
+    <p class="hero-subtitle">Create ATS-optimized resumes in minutes. Choose from 30+ professional templates designed by HR experts.</p>
+    
+    <div class="hero-buttons">
+      <button class="btn-primary" (click)="goToLogin()" *ngIf="!isLoggedIn">Get Started Free</button>
+      <button class="btn-primary" (click)="goToDashboard()" *ngIf="isLoggedIn">Create Resume</button>
+      <button class="btn-secondary" (click)="goToPayment()">See Premium Plans</button>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-number">50K+</span>
+        <span class="stat-label">Resumes Created</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">95%</span>
+        <span class="stat-label">ATS Pass Rate</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number">24/7</span>
+        <span class="stat-label">Support</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="resume-preview">
+      <div class="resume-header">
+        <div class="header-line"></div>
+        <div class="header-line short"></div>
+      </div>
+      <div class="resume-content">
+        <div class="content-line"></div>
+        <div class="content-line"></div>
+        <div class="content-line short"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" @fadeIn>
+  <h2>Why Choose ResumeAI?</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎨</div>
+      <h3>Professional Templates</h3>
+      <p>30+ beautifully designed templates curated by HR professionals</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3>AI-Powered Suggestions</h3>
+      <p>Get smart suggestions to enhance your resume content</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">✓</div>
+      <h3>ATS Optimized</h3>
+      <p>All templates are optimized to pass Applicant Tracking Systems</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📱</div>
+      <h3>Fully Responsive</h3>
+      <p>Your resume looks perfect on any device</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⬇️</div>
+      <h3>Easy Download</h3>
+      <p>Download as PDF or DOCX with one click</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Secure & Private</h3>
+      <p>Your data is encrypted and never shared</p>
+    </div>
+  </div>
+</section>
+
+<!-- Templates Preview Section -->
+<section class="templates-preview">
+  <app-templates [showTitle]="true" [maxTemplates]="6"></app-templates>
+</section>
+
+<!-- Pricing Section Preview -->
+<section class="pricing-preview">
+  <h2>Simple, Transparent Pricing</h2>
+  <div class="pricing-comparison">
+    <div class="pricing-card free">
+      <h3>Free</h3>
+      <p class="price">$0</p>
+      <ul class="features">
+        <li>✓ 5 Free Templates</li>
+        <li>✓ Basic Editor</li>
+        <li>✓ PDF Download</li>
+        <li>✗ ATS Check</li>
+        <li>✗ Premium Templates</li>
+      </ul>
+    </div>
+    <div class="pricing-card pro popular">
+      <div class="badge">RECOMMENDED</div>
+      <h3>Pro</h3>
+      <p class="price">$9.99<span>/month</span></p>
+      <ul class="features">
+        <li>✓ 30+ Templates</li>
+        <li>✓ Advanced Editor</li>
+        <li>✓ PDF & DOCX</li>
+        <li>✓ ATS Check</li>
+        <li>✓ Priority Support</li>
+      </ul>
+      <button class="btn-pricing" (click)="goToPayment()">Upgrade Now</button>
+    </div>
+  </div>
+  <div class="pricing-cta">
+    <p>7-day free trial • No credit card required • Cancel anytime</p>
+    <button class="btn-primary" (click)="goToPayment()">Start Free Trial</button>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+  <div class="cta-content">
+    <h2>Ready to Land Your Dream Job?</h2>
+    <p>Join thousands of job seekers who have successfully secured positions using ResumeAI</p>
+    <button class="btn-primary btn-large" (click)="goToLogin()" *ngIf="!isLoggedIn">Create Your Resume Now</button>
+    <button class="btn-primary btn-large" (click)="goToDashboard()" *ngIf="isLoggedIn">Go to Dashboard</button>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>ResumeAI</h4>
+      <p>Build your perfect resume with AI-powered suggestions</p>
+    </div>
+    <div class="footer-section">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="#">Features</a></li>
+        <li><a href="#">Pricing</a></li>
+        <li><a href="#">Blog</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Contact</a></li>
+        <li><a href="#">Terms</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms of Service</a></li>
+        <li><a href="#">Cookie Policy</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2024 ResumeAI. All rights reserved.</p>
+  </div>
+</footer>
