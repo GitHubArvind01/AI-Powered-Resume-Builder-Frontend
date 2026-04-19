@@ -1,0 +1,170 @@
+<div class="payment-container">
+  <!-- Header -->
+  <div class="payment-header">
+    <button class="back-btn" (click)="goBack()">← Back</button>
+    <h1>Upgrade to ResumeAI Pro</h1>
+    <p>Unlock all premium features and templates</p>
+  </div>
+
+  <!-- Main Payment Section -->
+  <div class="payment-main">
+    <!-- Pricing Plans -->
+    <div class="pricing-section">
+      <h2>Choose Your Plan</h2>
+      <div class="pricing-cards">
+        <div 
+          *ngFor="let plan of plans" 
+          [class.selected]="selectedPlan === plan.id"
+          [class.popular]="plan.popular"
+          class="pricing-card"
+          (click)="selectPlan(plan.id)">
+          
+          <!-- Popular Badge -->
+          <div *ngIf="plan.popular" class="popular-badge">
+            MOST POPULAR
+          </div>
+
+          <h3>{{ plan.name }}</h3>
+          <div class="price-section">
+            <span class="price">{{ formatPrice(plan.price) }}</span>
+            <span class="duration">/ {{ plan.duration }}</span>
+          </div>
+
+          <div *ngIf="plan.originalPrice" class="original-price">
+            Was {{ formatPrice(plan.originalPrice) }}
+          </div>
+
+          <ul class="features-list">
+            <li *ngFor="let feature of plan.features">
+              <span class="checkmark">✓</span>
+              {{ feature }}
+            </li>
+          </ul>
+
+          <button 
+            [class.selected]="selectedPlan === plan.id"
+            class="select-btn">
+            {{ selectedPlan === plan.id ? '✓ Selected' : 'Select Plan' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Method -->
+    <div class="payment-method-section">
+      <h2>Select Payment Method</h2>
+      <div class="payment-methods">
+        <div 
+          *ngFor="let method of paymentMethods"
+          [class.selected]="paymentMethod === method.id"
+          class="method-card"
+          (click)="selectPaymentMethod(method.id)">
+          <span class="method-icon">{{ method.icon }}</span>
+          <span class="method-name">{{ method.name }}</span>
+          <span *ngIf="paymentMethod === method.id" class="selected-checkmark">✓</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="order-summary">
+      <h3>Order Summary</h3>
+      <div class="summary-item">
+        <span>{{ getPlanDetails()?.name }} Plan</span>
+        <span>{{ formatPrice(getPlanDetails()?.price) }}</span>
+      </div>
+      <div class="summary-item tax">
+        <span>Estimated Tax</span>
+        <span>$0.00</span>
+      </div>
+      <div class="summary-total">
+        <span>Total</span>
+        <span>{{ formatPrice(getPlanDetails()?.price) }}</span>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="paymentError" class="error-message">
+      <span class="error-icon">⚠️</span>
+      {{ paymentError }}
+    </div>
+
+    <!-- Payment Button -->
+    <button 
+      class="pay-btn"
+      [disabled]="isProcessing"
+      (click)="initiatePayment()">
+      <span *ngIf="!isProcessing">
+        {{ paymentMethod === 'paypal' ? '🅿️ Pay with PayPal' : '💳 Pay with Card' }} - {{ formatPrice(getPlanDetails()?.price) }}
+      </span>
+      <span *ngIf="isProcessing">
+        <span class="spinner-small"></span> Processing...
+      </span>
+    </button>
+
+    <!-- Secure Payment Note -->
+    <div class="security-note">
+      🔒 Secure payment powered by industry-leading encryption
+    </div>
+  </div>
+
+  <!-- Benefits Section -->
+  <div class="benefits-section">
+    <h2>What You Get with ResumeAI Pro</h2>
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <div class="benefit-icon">📄</div>
+        <h3>Premium Templates</h3>
+        <p>Access 30+ professionally designed templates</p>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🤖</div>
+        <h3>ATS Optimization</h3>
+        <p>Score your resume against ATS requirements</p>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">📊</div>
+        <h3>Analytics</h3>
+        <p>Track resume views and application insights</p>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">⚡</div>
+        <h3>Priority Support</h3>
+        <p>Get help from our support team</p>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">♾️</div>
+        <h3>Unlimited Resumes</h3>
+        <p>Create as many resumes as you want</p>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🎨</div>
+        <h3>Custom Branding</h3>
+        <p>Add your logo and customize colors</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ Section -->
+  <div class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-items">
+      <div class="faq-item">
+        <h4>Can I cancel anytime?</h4>
+        <p>Yes, you can cancel your subscription anytime from your account settings. Your access continues until the end of your billing period.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Is there a free trial?</h4>
+        <p>We offer a 7-day free trial for new users. No credit card required to start.</p>
+      </div>
+      <div class="faq-item">
+        <h4>What payment methods do you accept?</h4>
+        <p>We accept PayPal, all major credit cards (Visa, MasterCard, American Express), and more.</p>
+      </div>
+      <div class="faq-item">
+        <h4>Do you offer refunds?</h4>
+        <p>We offer a 30-day money-back guarantee if you're not satisfied with our service.</p>
+      </div>
+    </div>
+  </div>
+</div>
