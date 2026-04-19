@@ -1,0 +1,233 @@
+<div class="auth-wrapper">
+  <div class="from-container">
+
+    <!-- ================= LOGIN / SIGNUP ================= -->
+    <ng-container *ngIf="currentStep === 'LOGIN_SIGNUP'">
+
+      <div class="choose-option">
+        <button [class.active]="isLoginMode" (click)="toggleMode()">Login</button>
+        <button [class.active]="!isLoginMode" (click)="toggleMode()">Signup</button>
+      </div>
+
+      <!-- FORM START -->
+      <form #authForm="ngForm" (ngSubmit)="onSubmit(authForm)">
+
+        <!-- Username -->
+        <div class="f-group" *ngIf="!isLoginMode">
+          <label>Username</label>
+          <input type="text"
+                 [(ngModel)]="authData.username"
+                 name="username"
+                 required
+                 minlength="3"
+                 #username="ngModel"
+                 [class.invalid]="username.invalid && username.touched">
+
+          <small *ngIf="username.invalid && username.touched">
+            Username must be at least 3 characters
+          </small>
+        </div>
+
+        <!-- Email -->
+        <div class="f-group">
+          <label>Email</label>
+          <input type="email"
+                 [(ngModel)]="authData.email"
+                 name="email"
+                 required
+                 email
+                 #email="ngModel"
+                 [class.invalid]="email.invalid && email.touched">
+
+          <small *ngIf="email.invalid && email.touched">
+            Enter valid email
+          </small>
+        </div>
+
+        <!-- Password -->
+        <div class="f-group">
+          <label>Password</label>
+          <input type="password"
+                 [(ngModel)]="authData.password"
+                 name="password"
+                 required
+                 minlength="6"
+                 #password="ngModel"
+                 [class.invalid]="password.invalid && password.touched">
+
+          <small *ngIf="password.invalid && password.touched">
+            Password must be at least 6 characters
+          </small>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="f-group" *ngIf="!isLoginMode">
+          <label>Confirm Password</label>
+          <input type="password"
+                 [(ngModel)]="authData.confirmPassword"
+                 name="confirmPassword"
+                 required
+                 #confirmPassword="ngModel"
+                 [class.invalid]="confirmPassword.invalid && confirmPassword.touched">
+
+          <small *ngIf="confirmPassword.invalid && confirmPassword.touched">
+            Confirm your password
+          </small>
+        </div>
+
+        <!-- Toast Messages -->
+       <div class="toast-wrapper" *ngIf="errorMessage || successMessage">
+          <div [class]="errorMessage ? 'toast error' : 'toast success'">
+            <div class="toast-content">
+              <i class="icon">{{ errorMessage ? '⚠️' : '✅' }}</i>
+              <span>{{ errorMessage || successMessage }}</span>
+            </div>
+            <button class="close-toast" (click)="clearMessages()">×</button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="authForm.invalid || isLoading">
+          <span *ngIf="!isLoading">{{ isLoginMode ? 'Login' : 'Create Account' }}</span>
+          <span *ngIf="isLoading" class="loader"></span> 
+        </button>
+
+        <!-- Forgot Password -->
+        <div class="forget-group" *ngIf="isLoginMode">
+          <button type="button"
+                  class="forget-btn"
+                  (click)="currentStep = 'FORGOT_PASSWORD_REQ'">
+            Forgot password?
+          </button>
+        </div>
+
+        <div id="text-mid"><span>OR</span></div>
+
+        <!-- Google -->
+        <button type="button" class="google-btn" (click)="loginWithGoogle()">
+          <img src="https://developers.google.com/identity/images/g-logo.png" alt="google">
+          Continue with Google
+        </button>
+
+      </form>
+      <!-- FORM END -->
+
+    </ng-container>
+
+    <!-- ================= VERIFY REGISTRATION ================= -->
+    <ng-container *ngIf="currentStep === 'VERIFY_REGISTRATION'">
+      <h2>Verify Email</h2>
+      <p>Enter the code sent to <b>{{authData.email}}</b></p>
+
+      <div class="f-group">
+        <input type="text"
+               [(ngModel)]="otpValue"
+               name="otp"
+               required
+               minlength="4"
+               maxlength="6"
+               #otp="ngModel"
+               class="otp-input"
+               [class.invalid]="otp.invalid && otp.touched">
+
+        <small *ngIf="otp.invalid && otp.touched">
+          Enter valid OTP
+        </small>
+      </div>
+
+      <button class="submit-btn"
+              [disabled]="otp.invalid"
+              (click)="verifyRegisterOtp()">
+        Verify & Register
+      </button>
+
+      <div id="text-mid"><span>OR</span></div>
+
+      <button class="forget-btn" (click)="resetToLogin()">Cancel</button>
+    </ng-container>
+
+    <!-- ================= FORGOT PASSWORD ================= -->
+    <ng-container *ngIf="currentStep === 'FORGOT_PASSWORD_REQ'">
+      <h2>Reset Password</h2>
+
+      <div class="f-group">
+        <label>Email Address</label>
+        <input type="email"
+               [(ngModel)]="authData.email"
+               name="forgotEmail"
+               required
+               email
+               #forgotEmail="ngModel"
+               [class.invalid]="forgotEmail.invalid && forgotEmail.touched">
+
+        <small *ngIf="forgotEmail.invalid && forgotEmail.touched">
+          Enter valid email
+        </small>
+      </div>
+
+      <button class="submit-btn"
+              [disabled]="forgotEmail.invalid"
+              (click)="initiateForgotPassword()">
+        Send Reset OTP
+      </button>
+
+      <div id="text-mid"><span>OR</span></div>
+
+      <button class="forget-btn" (click)="resetToLogin()">Back to Login</button>
+    </ng-container>
+
+    <!-- ================= VERIFY FORGOT OTP ================= -->
+    <ng-container *ngIf="currentStep === 'VERIFY_FORGOT_OTP'">
+      <h2>Verify Reset Code</h2>
+
+      <div class="f-group">
+        <input type="text"
+               [(ngModel)]="otpValue"
+               name="forgotOtp"
+               required
+               minlength="4"
+               maxlength="6"
+               #forgotOtp="ngModel"
+               class="otp-input"
+               [class.invalid]="forgotOtp.invalid && forgotOtp.touched">
+
+        <small *ngIf="forgotOtp.invalid && forgotOtp.touched">
+          Enter valid OTP
+        </small>
+      </div>
+
+      <button class="submit-btn"
+              [disabled]="forgotOtp.invalid"
+              (click)="verifyForgotOtp()">
+        Verify Code
+      </button>
+    </ng-container>
+
+    <!-- ================= RESET PASSWORD ================= -->
+    <ng-container *ngIf="currentStep === 'RESET_PASSWORD'">
+      <h2>Set New Password</h2>
+
+      <div class="f-group">
+        <label>New Password</label>
+        <input type="password"
+               [(ngModel)]="newPassword"
+               name="newPassword"
+               required
+               minlength="6"
+               #newPass="ngModel"
+               [class.invalid]="newPass.invalid && newPass.touched">
+
+        <small *ngIf="newPass.invalid && newPass.touched">
+          Password must be at least 6 characters
+        </small>
+      </div>
+
+      <button class="submit-btn"
+              [disabled]="newPass.invalid"
+              (click)="submitNewPassword()">
+        Update Password
+      </button>
+    </ng-container>
+
+  </div>
+</div>
