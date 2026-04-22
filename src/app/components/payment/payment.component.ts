@@ -64,7 +64,7 @@ export class PaymentComponent implements OnInit {
   ngOnInit(): void {
     // Check if user is already premium
     this.userService.userProfile$.subscribe(profile => {
-      if (profile?.isPremium) {
+      if (profile?.isPremium && !this.paymentService.isPaymentInProgress()) {
         this.router.navigate(['/dashboard']);
       }
     });
@@ -104,11 +104,13 @@ export class PaymentComponent implements OnInit {
           window.location.href = response.paymentLink;
         } else {
           this.paymentError = 'Failed to initiate payment.';
+          this.paymentService.setPaymentStatus(false); // Reset on failure
           this.isProcessing = false;
         }
       },
       error => {
         this.paymentError = 'Payment initialization failed.';
+        this.paymentService.setPaymentStatus(false); // Reset on failure
         this.isProcessing = false;
       }
     );
