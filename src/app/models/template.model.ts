@@ -21,7 +21,10 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
+  fullName?: string;
+  phone?: string;
   isPremium: boolean;
+  subscription_plan?: 'FREE' | 'MONTHLY' | 'YEARLY' | 'PRO';
   subscriptionExpiry?: Date;
   createdAt: Date;
 }
