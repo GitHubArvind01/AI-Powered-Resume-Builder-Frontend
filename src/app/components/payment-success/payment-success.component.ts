@@ -2,6 +2,7 @@ import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UserService } from '../../services/user.service';
+import {PaymentService} from '../../services/payment.service';
 
 @Component({
   selector: 'app-payment-success',
@@ -11,6 +12,7 @@ import { UserService } from '../../services/user.service';
   styleUrls: ['./payment-success.component.css']
 })
 export class PaymentSuccessComponent implements OnInit, OnDestroy {
+  private paymentService = inject(PaymentService);
   private router = inject(Router);
   private userService = inject(UserService);
 
@@ -18,6 +20,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
   private animationTimeout: any;
 
   ngOnInit(): void {
+    this.paymentService.setPaymentStatus(false);
     // Refresh user profile to get updated subscription status
     this.userService.loadUserProfile();
 

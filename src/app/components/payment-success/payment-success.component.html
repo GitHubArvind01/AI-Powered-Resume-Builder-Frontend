@@ -1,18 +1,14 @@
-<div class="payment-success-container" *ngIf="showAnimation">
-  <!-- Success Animation -->
-  <div class="success-animation">
-    <!-- Success Checkmark Animation -->
-    <div class="checkmark-wrapper">
-      <div class="checkmark">
-        <div class="checkmark-circle"></div>
-        <div class="checkmark-check"></div>
-      </div>
+<div class="status-container">
+  <div class="card fade-in">
+    <div class="icon-circle success">
+      <div class="checkmark"></div>
     </div>
+    <h1>Payment Successful!</h1>
+    <p class="description">Your subscription has been activated successfully.</p>
 
-    <!-- Success Message -->
-    <h1>Payment Successful! 🎉</h1>
-    <p class="success-text">Your subscription has been activated.</p>
-    <p class="redirect-message">Redirecting to dashboard...</p>
+    <div class="loading-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <p class="redirect">Redirecting to dashboard...</p>
   </div>
 </div>
-
