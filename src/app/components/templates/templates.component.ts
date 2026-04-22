@@ -2,6 +2,7 @@ import { Component, inject, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ResumeService } from '../../services/resume.service';
+import { TemplateDataService } from '../../services/template-data.service';
 import { UserService } from '../../services/user.service';
 import { Template, UserPlan } from '../../models/template.model';
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -29,6 +30,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
 })
 export class TemplatesComponent implements OnInit {
   private resumeService = inject(ResumeService);
+  private templateDataService = inject(TemplateDataService);
   private userService = inject(UserService);
   private router = inject(Router);
 
@@ -59,10 +61,14 @@ export class TemplatesComponent implements OnInit {
   }
 
   loadTemplates(): void {
-    this.resumeService.templates$.subscribe(
+    this.templateDataService.getAllTemplates().subscribe(
       templates => {
         this.templates = templates;
         this.filterTemplates();
+        this.isLoading = false;
+      },
+      error => {
+        console.error('Error loading templates:', error);
         this.isLoading = false;
       }
     );
@@ -79,6 +85,11 @@ export class TemplatesComponent implements OnInit {
   filterTemplates(): void {
     let filtered = this.templates;
     
+    // If user is free, only show free templates
+    if (this.currentUserPlan === UserPlan.FREE) {
+      filtered = filtered.filter(t => !t.isPro);
+    }
+    
     if (this.selectedCategory !== 'all') {
       filtered = filtered.filter(t => t.category === this.selectedCategory);
     }
@@ -92,16 +103,19 @@ export class TemplatesComponent implements OnInit {
   }
 
   selectTemplate(template: Template): void {
-    // If template is pro and user is free, show upgrade modal
+    this.selectedTemplate = template;
     if (template.isPro && this.currentUserPlan === UserPlan.FREE) {
-      this.selectedTemplate = template;
       this.showUpgradeModal = true;
       return;
     }
+    this.createResumeFromTemplate(template);
+  }
 
-    // Otherwise, navigate to template editor
-    console.log('Selected template:', template);
-    // Navigate to resume editor with template
+  createResumeFromTemplate(template: Template): void {
+    // Navigate to create resume with template
+    this.router.navigate(['/resume/create'], { 
+      queryParams: { templateId: template.id } 
+    });
   }
 
   closeUpgradeModal(): void {
@@ -110,18 +124,15 @@ export class TemplatesComponent implements OnInit {
   }
 
   goToUpgrade(): void {
-    this.router.navigate(['/payment']);
     this.closeUpgradeModal();
+    this.router.navigate(['/payment']);
   }
 
   getTemplateLabel(template: Template): string {
-    if (template.isPro) {
-      return 'PRO';
-    }
-    return 'FREE';
+    return template.isPro ? '⭐ PRO' : '🆓 FREE';
   }
 
-  getPlanColor(template: Template): string {
+    getPlanColor(template: Template): string {
     return template.isPro ? 'pro-badge' : 'free-badge';
   }
 }
