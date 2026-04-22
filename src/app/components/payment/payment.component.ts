@@ -88,39 +88,31 @@ export class PaymentComponent implements OnInit {
     this.isProcessing = true;
     this.paymentError = null;
 
-    try {
-      const plan = this.getPlanDetails();
-      const paymentRequest: PaymentRequest = {
-        price: plan.price,
-        currency: 'USD',
-        method: this.paymentMethod,
-        intent: 'sale',
-        description: `ResumeAI ${plan.name} Subscription - ${plan.duration}`
-      };
+    const plan = this.getPlanDetails();
+    const paymentRequest: PaymentRequest = {
+      price: plan.price,
+      currency: 'USD',
+      method: this.paymentMethod,
+      intent: 'sale',
+      description: `ResumeAI ${plan.name} Subscription - ${plan.duration}`
+    };
 
-      // Call payment service
-      this.paymentService.initiatePayment(paymentRequest).subscribe(
-        response => {
-          if (response.paymentLink) {
-            // Redirect to PayPal or payment gateway
-            window.location.href = response.paymentLink;
-          } else {
-            this.paymentError = 'Failed to initiate payment. Please try again.';
-            this.isProcessing = false;
-          }
-        },
-        error => {
-          console.error('Payment error:', error);
-          this.paymentError = error?.error?.message || 'Payment initialization failed. Please try again.';
+    this.paymentService.initiatePayment(paymentRequest).subscribe(
+      response => {
+        if (response.paymentLink) {
+          // Redirect the entire browser to PayPal
+          window.location.href = response.paymentLink;
+        } else {
+          this.paymentError = 'Failed to initiate payment.';
           this.isProcessing = false;
         }
-      );
-    } catch (error) {
-      this.paymentError = 'An unexpected error occurred. Please try again.';
-      this.isProcessing = false;
-    }
+      },
+      error => {
+        this.paymentError = 'Payment initialization failed.';
+        this.isProcessing = false;
+      }
+    );
   }
-
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
