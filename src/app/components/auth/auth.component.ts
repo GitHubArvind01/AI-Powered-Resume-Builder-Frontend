@@ -21,16 +21,15 @@ export class AuthComponent implements OnInit {
   currentStep: AuthStep = 'LOGIN_SIGNUP';
   errorMessage = '';
   successMessage = '';
-  
-  // Form Data
-  authData = { 
-    username: '', 
-    email: '', 
-    password: '', 
-    confirmPassword: '', 
-    role: 'USER' 
+
+  // Form Data - Matches Java RegisterRequest DTO
+  authData = {
+    fullName: '',
+    email: '',
+    password: '',
+    phone: ''
   };
-  
+
   otpValue = '';
   newPassword = '';
 
@@ -77,10 +76,6 @@ export class AuthComponent implements OnInit {
   }
 
   private handleRegisterRequest() {
-    if (this.authData.password !== this.authData.confirmPassword) {
-      this.showError("Passwords do not match!");
-      return;
-    }
     this.authService.registerRequest(this.authData).subscribe({
       next: (res) => {
         this.isLoading = false;
@@ -106,7 +101,7 @@ export class AuthComponent implements OnInit {
       if (typeof err.error === 'object' && err.error.message) {
         return err.error.message;
       }
-      
+
       // If it's a JSON string (sometimes happens with certain interceptors)
       if (typeof err.error === 'string') {
         try {

@@ -12,19 +12,19 @@
       <!-- FORM START -->
       <form #authForm="ngForm" (ngSubmit)="onSubmit(authForm)">
 
-        <!-- Username -->
+        <!-- Full Name -->
         <div class="f-group" *ngIf="!isLoginMode">
-          <label>Username</label>
+          <label>Full Name</label>
           <input type="text"
-                 [(ngModel)]="authData.username"
-                 name="username"
+                 [(ngModel)]="authData.fullName"
+                 name="fullName"
                  required
-                 minlength="3"
-                 #username="ngModel"
-                 [class.invalid]="username.invalid && username.touched">
+                 minlength="2"
+                 #fullName="ngModel"
+                 [class.invalid]="fullName.invalid && fullName.touched">
 
-          <small *ngIf="username.invalid && username.touched">
-            Username must be at least 3 characters
+          <small *ngIf="fullName.invalid && fullName.touched">
+            Full name required (at least 2 characters)
           </small>
         </div>
 
@@ -60,18 +60,18 @@
           </small>
         </div>
 
-        <!-- Confirm Password -->
+        <!-- Phone Number -->
         <div class="f-group" *ngIf="!isLoginMode">
-          <label>Confirm Password</label>
-          <input type="password"
-                 [(ngModel)]="authData.confirmPassword"
-                 name="confirmPassword"
+          <label>Phone Number</label>
+          <input type="tel"
+                 [(ngModel)]="authData.phone"
+                 name="phone"
                  required
-                 #confirmPassword="ngModel"
-                 [class.invalid]="confirmPassword.invalid && confirmPassword.touched">
+                 #phone="ngModel"
+                 [class.invalid]="phone.invalid && phone.touched">
 
-          <small *ngIf="confirmPassword.invalid && confirmPassword.touched">
-            Confirm your password
+          <small *ngIf="phone.invalid && phone.touched">
+            Phone number is required
           </small>
         </div>
 
@@ -89,7 +89,7 @@
         <!-- Submit -->
         <button type="submit" class="submit-btn" [disabled]="authForm.invalid || isLoading">
           <span *ngIf="!isLoading">{{ isLoginMode ? 'Login' : 'Create Account' }}</span>
-          <span *ngIf="isLoading" class="loader"></span> 
+          <span *ngIf="isLoading" class="loader"></span>
         </button>
 
         <!-- Forgot Password -->
