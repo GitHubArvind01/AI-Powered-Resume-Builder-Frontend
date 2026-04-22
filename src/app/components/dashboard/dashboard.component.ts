@@ -151,6 +151,6 @@ export class DashboardComponent implements OnInit {
 
   downloadResume(resumeId: string): void {
     // Implement download functionality
-    console.log('Download resume:', resumeId);
+    alert('Download feature coming soon!');
   }
 }
