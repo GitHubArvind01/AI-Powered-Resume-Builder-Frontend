@@ -1,0 +1,36 @@
+.failed {
+  background-color: #fef2f2;
+  border: 3px solid #ef4444;
+}
+
+.cross {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.cross:before, .cross:after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 4px;
+  background-color: #ef4444;
+  top: 13px;
+  left: 0;
+}
+
+.cross:before { transform: rotate(45deg); }
+.cross:after { transform: rotate(-45deg); }
+
+.btn-retry {
+  background: #1e293b;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-retry:hover { background: #334155; }
