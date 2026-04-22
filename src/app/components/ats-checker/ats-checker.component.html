@@ -1,0 +1,110 @@
+<!-- ATS Checker Modal -->
+<div *ngIf="isOpen" class="ats-overlay" (click)="closeModal()" [@fadeIn]>
+  <div class="ats-modal" (click)="$event.stopPropagation()" [@slideIn]>
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>ATS Compatibility Check</h2>
+      <button class="close-btn" (click)="closeModal()">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div class="modal-content">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <div class="spinner"></div>
+        <p>Analyzing your resume...</p>
+      </div>
+
+      <!-- Error State -->
+      <div *ngIf="error && !isLoading" class="error-state">
+        <div class="error-icon">⚠️</div>
+        <p>{{ error }}</p>
+      </div>
+
+      <!-- Results State -->
+      <div *ngIf="result && !isLoading && !error" class="results-state">
+        <!-- Score Card -->
+        <div class="score-card">
+          <div class="score-circle" [style.borderColor]="getScoreColor()">
+            <div class="score-value">{{ result.score }}</div>
+            <div class="score-label">/100</div>
+          </div>
+          <div class="score-info">
+            <h3>{{ getScoreLabel() }}</h3>
+            <p>Your resume is {{ getScoreLabel().toLowerCase() }} for ATS systems</p>
+          </div>
+        </div>
+
+        <!-- Credits Info -->
+        <div class="credits-info">
+          <span class="credits-used">
+            Credits Used: <strong>{{ result.creditsUsed }}</strong>
+          </span>
+          <span class="credits-remaining" [class.low]="result.creditsRemaining <= 1">
+            Remaining: <strong>{{ result.creditsRemaining }}</strong>
+          </span>
+        </div>
+
+        <!-- Issues Summary -->
+        <div class="issues-summary">
+          <div class="issue-count critical" *ngIf="criticalIssuesCount > 0">
+            <span class="icon">🔴</span>
+            <span class="count">{{ criticalIssuesCount }}</span>
+            <span class="label">Critical</span>
+          </div>
+          <div class="issue-count warning" *ngIf="warningIssuesCount > 0">
+            <span class="icon">🟡</span>
+            <span class="count">{{ warningIssuesCount }}</span>
+            <span class="label">Warnings</span>
+          </div>
+          <div class="issue-count info" *ngIf="infoIssuesCount > 0">
+            <span class="icon">ℹ️</span>
+            <span class="count">{{ infoIssuesCount }}</span>
+            <span class="label">Info</span>
+          </div>
+        </div>
+
+        <!-- Issues List -->
+        <div class="issues-container" *ngIf="result.issues.length > 0">
+          <h4>Issues Found</h4>
+          <div class="issues-list">
+            <div *ngFor="let issue of result.issues" class="issue-item" [class]="issue.severity">
+              <div class="issue-icon">
+                <span *ngIf="issue.severity === 'critical'">🔴</span>
+                <span *ngIf="issue.severity === 'warning'">🟡</span>
+                <span *ngIf="issue.severity === 'info'">ℹ️</span>
+              </div>
+              <div class="issue-content">
+                <p class="issue-message">{{ issue.message }}</p>
+                <p class="issue-severity" [class]="issue.severity">
+                  {{ issue.severity | uppercase }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Suggestions -->
+        <div class="suggestions-container" *ngIf="result.suggestions.length > 0">
+          <h4>Suggestions to Improve</h4>
+          <ul class="suggestions-list">
+            <li *ngFor="let suggestion of result.suggestions" class="suggestion-item">
+              <span class="suggestion-icon">💡</span>
+              <span>{{ suggestion }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="downloadReport()" *ngIf="result && !isLoading">
+        📥 Download Report
+      </button>
+      <button class="btn-primary" (click)="closeModal()">
+        {{ isLoading ? 'Analyzing...' : 'Close' }}
+      </button>
+    </div>
+  </div>
+</div>
