@@ -3,10 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Template, Resume } from '../models/template.model';
+import { TemplateDataService } from './template-data.service';
 
 @Injectable({ providedIn: 'root' })
 export class ResumeService {
   private http = inject(HttpClient);
+  private templateDataService = inject(TemplateDataService);
   private apiUrl = `${environment.gatewayUrl}/resume`;
 
   private templatesSubject = new BehaviorSubject<Template[]>([]);
@@ -21,13 +23,19 @@ export class ResumeService {
 
   // Get all templates
   getTemplates(): Observable<Template[]> {
-    return this.http.get<Template[]>(`${this.apiUrl}/templates`);
+    return this.templateDataService.getAllTemplates();
   }
 
   loadTemplates(): void {
     this.getTemplates().subscribe(
       templates => this.templatesSubject.next(templates),
-      error => console.error('Error loading templates:', error)
+      error => {
+        console.error('Error loading templates:', error);
+        // Load default templates on error
+        this.templateDataService.getAllTemplates().subscribe(
+          templates => this.templatesSubject.next(templates)
+        );
+      }
     );
   }
 

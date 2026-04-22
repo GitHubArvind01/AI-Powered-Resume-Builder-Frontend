@@ -1,15 +1,18 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { UserProfile } from '../models/template.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = `${environment.gatewayUrl}/auth/user`;
-  private googleAuthUrl = `${environment.gatewayUrl}/auth/google`;
+  private apiUrl = `${environment.gatewayUrl}/auth`;
+  private googleAuthUrl = `${environment.gatewayUrl}/auth`;
+  private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
+  public userProfile$ = this.userProfileSubject.asObservable();
 
   // --- Registration Flow ---
   registerRequest(userData: any): Observable<string> {
@@ -70,7 +73,7 @@ export class AuthService {
     const responseType = 'code';
 
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&access_type=offline&prompt=select_account`;
-    
+
     window.location.href = url;
   }
 
@@ -80,5 +83,23 @@ export class AuthService {
         if (res.token) localStorage.setItem('token', res.token);
       })
     );
+  }
+
+  // --- Profile Refresh ---
+  refreshUserProfile(): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${environment.gatewayUrl}/user/profile`).pipe(
+      tap((profile: UserProfile) => {
+        localStorage.setItem('userProfile', JSON.stringify(profile));
+        this.userProfileSubject.next(profile);
+      })
+    );
+  }
+
+  getCurrentUserProfile(): UserProfile | null {
+    return this.userProfileSubject.value;
+  }
+
+  getUserProfileObservable(): Observable<UserProfile | null> {
+    return this.userProfile$;
   }
 }

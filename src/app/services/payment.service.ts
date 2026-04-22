@@ -7,7 +7,7 @@ import { PaymentRequest, PaymentResponse } from '../models/template.model';
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.gatewayUrl}/payment`;
+  private apiUrl = `${environment.gatewayUrl}/payments`;
 
   // Initiate payment
   initiatePayment(paymentData: PaymentRequest): Observable<PaymentResponse> {

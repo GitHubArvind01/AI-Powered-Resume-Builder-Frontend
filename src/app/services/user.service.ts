@@ -30,6 +30,8 @@ export class UserService {
         this.userProfileSubject.next(profile);
         const plan = profile.isPremium ? UserPlan.PRO : UserPlan.FREE;
         this.userPlanSubject.next(plan);
+        // Store profile in localStorage for quick access
+        localStorage.setItem('userProfile', JSON.stringify(profile));
       },
       error => console.error('Error loading user profile:', error)
     );
