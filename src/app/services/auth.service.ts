@@ -22,14 +22,14 @@ export class AuthService {
   registerVerify(email: string, otp: string): Observable<any> {
     const params = new HttpParams().set('email', email).set('otp', otp);
     return this.http.post(`${this.apiUrl}/register-user`, {}, { params }).pipe(
-      tap((res: any) => this.setToken(res.token))
+      tap((res: any) => this.setTokenData(res.token, res.role, res.subscriptionPlan))
     );
   }
 
   // --- Login Flow ---
   login(credentials: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
-      tap((res: any) => this.setToken(res.token))
+      tap((res: any) => this.setTokenData(res.token, res.role, res.subscriptionPlan))
     );
   }
 
@@ -49,12 +49,18 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/forgot-password/reset`, {}, { params, responseType: 'text' });
   }
 
-  private setToken(token: string) {
-    if (token) localStorage.setItem('token', token);
+  private setTokenData(token: string, role: string, subscriptionPlan: string) {
+    if (token) {
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
+      localStorage.setItem('subscriptionPlan', subscriptionPlan);
+    }
   }
 
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('subscriptionPlan');
     this.router.navigate(['/auth']);
   }
 
