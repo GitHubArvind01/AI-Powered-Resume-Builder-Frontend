@@ -18,15 +18,20 @@ export interface Resume {
 }
 
 export interface UserProfile {
-  id: string;
+  id: number;
   email: string;
-  name: string;
-  fullName?: string;
+  fullName: string;
   phone?: string;
-  isPremium: boolean;
-  subscription_plan?: 'FREE' | 'MONTHLY' | 'YEARLY' | 'PRO';
-  subscriptionExpiry?: Date;
-  createdAt: Date;
+  role: string;
+  active: boolean;
+  subscriptionPlan: 'FREE' | 'MONTHLY' | 'YEARLY' | 'PRO' | string;
+}
+
+export interface AuthResponse {
+  token: string;
+  role: string;
+  subscriptionPlan: string;
+  message?: string;
 }
 
 export interface PaymentRequest {
