@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { TemplatesComponent } from '../templates/templates.component';
-import { AuthService } from '../../services/auth.service';
+import { AuthStateService } from '../../services/auth-state.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
@@ -28,15 +28,13 @@ import { trigger, transition, style, animate } from '@angular/animations';
 })
 export class WelcomeComponent implements OnInit {
   private router = inject(Router);
-  private authService = inject(AuthService);
+  private authState = inject(AuthStateService);
 
   isLoggedIn = false;
   currentUser: any = null;
 
   ngOnInit(): void {
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    this.isLoggedIn = !!token;
+    this.isLoggedIn = this.authState.isLoggedIn();
   }
 
   goToLogin(): void {
