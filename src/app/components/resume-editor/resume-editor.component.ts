@@ -58,6 +58,8 @@ export class ResumeEditorComponent implements OnInit {
   selectedText: string = '';
   userPlan: UserPlan = UserPlan.FREE;
   aiRemaining = 0;
+  aiError: string | null = null;
+  exportError: string | null = null;
 
   activeSection: string = 'personal';
   sections: EditorSection[] = [
@@ -100,12 +102,10 @@ export class ResumeEditorComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.resumeService.getUserResumes().subscribe(
-      resumes => {
-        this.resume = resumes.find(r => r.id === resumeId) || null;
-        if (this.resume) {
-          this.initializeForm();
-        }
+    this.resumeService.getResumeById(resumeId).subscribe(
+      resume => {
+        this.resume = resume;
+        this.initializeForm();
         this.isLoading = false;
       },
       error => {
@@ -117,11 +117,13 @@ export class ResumeEditorComponent implements OnInit {
   }
 
   initializeNewResume(): void {
+    const templateId = this.route.snapshot.queryParamMap.get('templateId') || 'professional';
     this.resume = {
       id: 'new-' + Date.now(),
       title: 'My Resume',
-      templateId: 'professional',
+      templateId,
       content: {
+        templateId,
         personalInfo: {
           fullName: '',
           email: '',
@@ -229,11 +231,13 @@ export class ResumeEditorComponent implements OnInit {
     if (this.resume?.id.startsWith('new-')) {
       this.resumeService.createResume({
         title: content.title,
-        templateId: content.templateId
+        templateId: content.templateId,
+        content
       }).subscribe(
         created => {
-          this.resume = { ...created, content };
+          this.resume = created;
           this.isSaving = false;
+          this.router.navigate(['/resume', created.id, 'edit'], { replaceUrl: true });
         },
         error => {
           console.error('Error creating resume:', error);
@@ -263,49 +267,45 @@ export class ResumeEditorComponent implements OnInit {
     if (!content) return;
 
     this.showAiModal = true;
-    this.aiService.improveContent({ text: content, type: 'general' }).subscribe(
+    this.aiError = null;
+    this.aiService.improveContent({ text: content, type: 'general', resumeId: this.resume?.id }).subscribe(
       result => {
         this.resumeForm.patchValue({ [field]: result.improvedText });
         this.aiService.incrementUsage();
         this.aiRemaining = this.aiService.getRemainingImprovements();
+        this.showAiModal = false;
       },
-      error => console.error('AI error:', error)
+      error => {
+        console.error('AI error:', error);
+        this.aiError = error?.error?.message || 'AI enhancement failed. Please try again.';
+        this.showAiModal = false;
+      }
     );
   }
 
   exportResume(format: 'pdf' | 'docx' | 'txt'): void {
     if (!this.resume) return;
 
-    this.isExporting = true;
-    
-    switch (format) {
-      case 'pdf':
-        this.exportService.exportAsPdf(this.resume.id).subscribe(
-          blob => {
-            const fileName = this.exportService.generateFileName(this.resume!.title, 'pdf');
-            this.exportService.downloadFile(blob, fileName);
-            this.isExporting = false;
-          },
-          error => {
-            console.error('Export error:', error);
-            this.isExporting = false;
-          }
-        );
-        break;
-      case 'docx':
-        this.exportService.exportAsDocx(this.resume.id).subscribe(
-          blob => {
-            const fileName = this.exportService.generateFileName(this.resume!.title, 'docx');
-            this.exportService.downloadFile(blob, fileName);
-            this.isExporting = false;
-          },
-          error => {
-            console.error('Export error:', error);
-            this.isExporting = false;
-          }
-        );
-        break;
+    if (format !== 'pdf') {
+      this.exportError = 'Only PDF export is available right now.';
+      return;
     }
+
+    this.isExporting = true;
+    this.exportError = null;
+
+    this.exportService.exportAsPdf(this.resume.id).subscribe(
+      blob => {
+        const fileName = this.exportService.generateFileName(this.resume!.title, 'pdf');
+        this.exportService.downloadFile(blob, fileName);
+        this.isExporting = false;
+      },
+      error => {
+        console.error('Export error:', error);
+        this.exportError = error?.error?.message || 'PDF export failed. Please try again.';
+        this.isExporting = false;
+      }
+    );
   }
 
   performAtsCheck(): void {
