@@ -1,0 +1,134 @@
+<section class="users-header">
+  <div>
+    <p class="eyebrow">User Management</p>
+    <h2>Review accounts, change plans, and handle account actions safely.</h2>
+  </div>
+  <input
+    type="search"
+    [(ngModel)]="searchTerm"
+    placeholder="Search by name, email, role, or plan"
+  />
+</section>
+
+<p *ngIf="errorMessage" class="banner error">{{ errorMessage }}</p>
+<p *ngIf="successMessage" class="banner success">{{ successMessage }}</p>
+
+<div class="users-grid">
+  <section class="table-panel">
+    <p *ngIf="isLoading" class="state">Loading users...</p>
+
+    <table *ngIf="!isLoading">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Resumes</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of filteredUsers" [class.selected]="selectedUser?.id === user.id">
+          <td>{{ user.fullName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.subscriptionPlan }}</td>
+          <td>
+            <span class="status" [class.inactive]="!user.active">
+              {{ user.active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>{{ user.resumeCount }}</td>
+          <td>
+            <button type="button" (click)="viewUser(user.id)">View</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <aside class="detail-panel" *ngIf="selectedUser; else emptyState">
+    <header>
+      <div>
+        <h3>{{ selectedUser.fullName }}</h3>
+        <p>{{ selectedUser.email }}</p>
+      </div>
+      <span class="status" [class.inactive]="!selectedUser.active">
+        {{ selectedUser.active ? 'Active' : 'Inactive' }}
+      </span>
+    </header>
+
+    <form (ngSubmit)="saveUser()" #userForm="ngForm">
+      <label>
+        <span>Name</span>
+        <input name="fullName" [(ngModel)]="form.fullName" required />
+      </label>
+
+      <label>
+        <span>Email</span>
+        <input name="email" [(ngModel)]="form.email" required email />
+      </label>
+
+      <label>
+        <span>Phone</span>
+        <input name="phone" [(ngModel)]="form.phone" />
+      </label>
+
+      <div class="two-col">
+        <label>
+          <span>Role</span>
+          <select name="role" [(ngModel)]="form.role" required>
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </label>
+
+        <label>
+          <span>Plan</span>
+          <select name="subscriptionPlan" [(ngModel)]="form.subscriptionPlan" required>
+            <option value="FREE">FREE</option>
+            <option value="PRO">PRO</option>
+            <option value="MONTHLY">MONTHLY</option>
+            <option value="YEARLY">YEARLY</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" name="active" [(ngModel)]="form.active" />
+        <span>Account is active</span>
+      </label>
+
+      <div class="actions">
+        <button type="submit" [disabled]="isSaving || userForm.invalid">Save Changes</button>
+        <button type="button" class="warn" *ngIf="selectedUser.active" (click)="deactivateUser(selectedUser.id)">Deactivate</button>
+        <button type="button" class="ghost" *ngIf="!selectedUser.active" (click)="activateUser(selectedUser.id)">Activate</button>
+        <button type="button" class="danger" (click)="deleteUser(selectedUser.id)">Delete</button>
+      </div>
+    </form>
+
+    <section class="activity">
+      <h4>Activity</h4>
+      <p>Joined {{ selectedUser.createdAt | date: 'mediumDate' }}</p>
+      <p>Total resumes: {{ selectedUser.resumeCount }}</p>
+      <div class="resume-list" *ngIf="selectedUser.resumes.length; else noResumes">
+        <article *ngFor="let resume of selectedUser.resumes">
+          <strong>{{ resume.title }}</strong>
+          <span>{{ resume.status || 'DRAFT' }}</span>
+        </article>
+      </div>
+      <ng-template #noResumes>
+        <p>No resumes created yet.</p>
+      </ng-template>
+    </section>
+  </aside>
+
+  <ng-template #emptyState>
+    <aside class="detail-panel empty">
+      <h3>Select a user</h3>
+      <p>Choose a row to inspect account details and perform admin actions.</p>
+    </aside>
+  </ng-template>
+</div>
