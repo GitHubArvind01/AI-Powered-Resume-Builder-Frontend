@@ -1,15 +1,31 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Template, Resume } from '../models/template.model';
 import { TemplateDataService } from './template-data.service';
+import { AuthStateService } from './auth-state.service';
+
+interface BackendResumeResponse {
+  id: number;
+  userId: number;
+  title: string;
+  content: string | null;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+  description?: string | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ResumeService {
   private http = inject(HttpClient);
   private templateDataService = inject(TemplateDataService);
-  private apiUrl = `${environment.gatewayUrl}/resume`;
+  private authState = inject(AuthStateService);
+  private apiUrl = `${environment.gatewayUrl}/resumes`;
+  private aiUrl = `${environment.gatewayUrl}/ai`;
 
   private templatesSubject = new BehaviorSubject<Template[]>([]);
   public templates$ = this.templatesSubject.asObservable();
@@ -21,53 +37,133 @@ export class ResumeService {
     this.loadTemplates();
   }
 
-  // Get all templates
   getTemplates(): Observable<Template[]> {
     return this.templateDataService.getAllTemplates();
   }
 
   loadTemplates(): void {
-    this.getTemplates().subscribe(
-      templates => this.templatesSubject.next(templates),
-      error => {
-        console.error('Error loading templates:', error);
-        // Load default templates on error
-        this.templateDataService.getAllTemplates().subscribe(
-          templates => this.templatesSubject.next(templates)
-        );
-      }
+    this.getTemplates().subscribe({
+      next: (templates) => this.templatesSubject.next(templates),
+      error: () => this.templateDataService.getAllTemplates().subscribe((templates) => this.templatesSubject.next(templates))
+    });
+  }
+
+  getUserResumes(): Observable<Resume[]> {
+    const userId = this.authState.getCurrentUserId();
+    if (!userId) {
+      return throwError(() => new Error('User session is not ready.'));
+    }
+
+    return this.http.get<BackendResumeResponse[]>(`${this.apiUrl}/user/${userId}`).pipe(
+      map((resumes) => resumes.map((resume) => this.mapResume(resume))),
+      map((resumes) => {
+        this.resumesSubject.next(resumes);
+        return resumes;
+      })
     );
   }
 
-  // Get user's resumes
-  getUserResumes(): Observable<Resume[]> {
-    return this.http.get<Resume[]>(`${this.apiUrl}/user-resumes`);
+  getResumeById(id: string): Observable<Resume> {
+    return this.http.get<BackendResumeResponse>(`${this.apiUrl}/${id}`).pipe(
+      map((resume) => this.mapResume(resume))
+    );
   }
 
-  // Create new resume
-  createResume(data: { title: string; templateId: string }): Observable<Resume> {
-    return this.http.post<Resume>(`${this.apiUrl}/create`, data);
+  createResume(data: { title: string; templateId: string; content?: any }): Observable<Resume> {
+    const payload = {
+      title: data.title,
+      content: JSON.stringify(data.content ?? this.createEmptyResumeContent(data.templateId)),
+      isPublic: false,
+      status: 'DRAFT',
+      description: `Resume created with ${data.templateId} template`
+    };
+
+    return this.http.post<BackendResumeResponse>(this.apiUrl, payload).pipe(
+      map((resume) => this.mapResume(resume))
+    );
   }
 
-  // Update resume
   updateResume(id: string, data: any): Observable<Resume> {
-    return this.http.put<Resume>(`${this.apiUrl}/${id}`, data);
+    const { title, ...content } = data;
+    const payload = {
+      title: title ?? 'My Resume',
+      content: JSON.stringify(content),
+      isPublic: false,
+      status: 'DRAFT',
+      description: 'Updated from editor'
+    };
+
+    return this.http.put<BackendResumeResponse>(`${this.apiUrl}/${id}`, payload).pipe(
+      map((resume) => this.mapResume(resume))
+    );
   }
 
-  // Delete resume
-  deleteResume(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+  deleteResume(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  // Upload resume
   uploadResume(file: File): Observable<Resume> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post<Resume>(`${this.apiUrl}/upload`, formData);
+    return throwError(() => new Error(`Upload for "${file.name}" is not implemented by the current backend.`));
   }
 
-  // ATS Check
-  performAtsCheck(resumeId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${resumeId}/ats-check`, {});
+  performAtsCheck(resumeId: string, jobDescription: string = ''): Observable<any> {
+    return this.getResumeById(resumeId).pipe(
+      switchMap((resume) => {
+        const userId = this.authState.getCurrentUserId();
+        if (!userId) {
+          return throwError(() => new Error('User session is not ready.'));
+        }
+
+        return this.http.post(`${this.aiUrl}/check-ats`, {
+          userId,
+          resumeId: Number(resumeId),
+          resumeContent: JSON.stringify(resume.content),
+          jobDescription
+        });
+      })
+    );
+  }
+
+  private mapResume(resume: BackendResumeResponse): Resume {
+    const parsedContent = this.parseResumeContent(resume.content);
+    return {
+      id: String(resume.id),
+      title: resume.title,
+      templateId: parsedContent.templateId || 'professional',
+      content: parsedContent,
+      createdAt: new Date(resume.createdAt),
+      updatedAt: new Date(resume.updatedAt)
+    };
+  }
+
+  private parseResumeContent(content: string | null): any {
+    if (!content) {
+      return this.createEmptyResumeContent('professional');
+    }
+
+    try {
+      return JSON.parse(content);
+    } catch {
+      return {
+        ...this.createEmptyResumeContent('professional'),
+        summary: content
+      };
+    }
+  }
+
+  private createEmptyResumeContent(templateId: string): any {
+    return {
+      templateId,
+      personalInfo: {
+        fullName: '',
+        email: '',
+        phone: '',
+        location: ''
+      },
+      summary: '',
+      experience: [],
+      education: [],
+      skills: []
+    };
   }
 }

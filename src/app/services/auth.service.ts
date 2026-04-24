@@ -1,35 +1,41 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, BehaviorSubject } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { UserProfile } from '../models/template.model';
+import { AuthResponse } from '../models/template.model';
+import { AuthStateService } from './auth-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private authState = inject(AuthStateService);
   private apiUrl = `${environment.gatewayUrl}/auth`;
   private googleAuthUrl = `${environment.gatewayUrl}/auth`;
-  private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
-  public userProfile$ = this.userProfileSubject.asObservable();
 
   // --- Registration Flow ---
   registerRequest(userData: any): Observable<string> {
     return this.http.post(`${this.apiUrl}/register-request`, userData, { responseType: 'text' });
   }
 
-  registerVerify(email: string, otp: string): Observable<any> {
+  registerVerify(email: string, otp: string): Observable<AuthResponse> {
     const params = new HttpParams().set('email', email).set('otp', otp);
-    return this.http.post(`${this.apiUrl}/register-user`, {}, { params }).pipe(
-      tap((res: any) => this.setTokenData(res.token, res.role, res.subscriptionPlan))
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register-user`, {}, { params }).pipe(
+      tap((res) => {
+        this.authState.setSession(res);
+        this.authState.refreshCurrentUser().subscribe();
+      })
     );
   }
 
   // --- Login Flow ---
-  login(credentials: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
-      tap((res: any) => this.setTokenData(res.token, res.role, res.subscriptionPlan))
+  login(credentials: any): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
+      tap((res) => {
+        this.authState.setSession(res);
+        this.authState.refreshCurrentUser().subscribe();
+      })
     );
   }
 
@@ -49,27 +55,17 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/forgot-password/reset`, {}, { params, responseType: 'text' });
   }
 
-  private setTokenData(token: string, role: string, subscriptionPlan: string) {
-    if (token) {
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', role);
-      localStorage.setItem('subscriptionPlan', subscriptionPlan);
-    }
-  }
-
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('subscriptionPlan');
+    this.authState.clearSession(false);
     this.router.navigate(['/auth']);
   }
 
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('token');
+    return this.authState.isLoggedIn();
   }
 
   getToken() {
-    return localStorage.getItem('token');
+    return this.authState.getToken();
   }
 
   initiateGoogleLogin() {
@@ -83,29 +79,12 @@ export class AuthService {
     window.location.href = url;
   }
 
-  handleGoogleCallback(code: string): Observable<any> {
-    return this.http.get(`${this.googleAuthUrl}/callback?code=${code}`).pipe(
-      tap((res: any) => {
-        if (res.token) localStorage.setItem('token', res.token);
+  handleGoogleCallback(code: string): Observable<AuthResponse> {
+    return this.http.get<AuthResponse>(`${this.googleAuthUrl}/callback?code=${code}`).pipe(
+      tap((res) => {
+        this.authState.setSession(res);
+        this.authState.refreshCurrentUser().subscribe();
       })
     );
-  }
-
-  // --- Profile Refresh ---
-  refreshUserProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${environment.gatewayUrl}/user/profile`).pipe(
-      tap((profile: UserProfile) => {
-        localStorage.setItem('userProfile', JSON.stringify(profile));
-        this.userProfileSubject.next(profile);
-      })
-    );
-  }
-
-  getCurrentUserProfile(): UserProfile | null {
-    return this.userProfileSubject.value;
-  }
-
-  getUserProfileObservable(): Observable<UserProfile | null> {
-    return this.userProfile$;
   }
 }

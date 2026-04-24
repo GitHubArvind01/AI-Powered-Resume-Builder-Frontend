@@ -1,75 +1,43 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
-import { UserProfile, UserPlan } from '../models/template.model';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { UserPlan, UserProfile } from '../models/template.model';
+import { AuthStateService } from './auth-state.service';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private http = inject(HttpClient);
-  private apiUrl = `${environment.gatewayUrl}/user`;
+  private authState = inject(AuthStateService);
 
-  private userProfileSubject = new BehaviorSubject<UserProfile | null>(null);
-  public userProfile$ = this.userProfileSubject.asObservable();
+  public userProfile$ = this.authState.user$;
+  public userPlan$ = this.authState.user$.pipe(
+    map(() => this.authState.getCurrentPlan())
+  );
 
-  private userPlanSubject = new BehaviorSubject<UserPlan>(UserPlan.FREE);
-  public userPlan$ = this.userPlanSubject.asObservable();
-
-  constructor() {
-    this.loadUserProfile();
-  }
-
-  // Get user profile
   getUserProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.apiUrl}/profile`);
+    return this.authState.refreshCurrentUser();
   }
 
   loadUserProfile(): void {
-    this.getUserProfile().subscribe(
-      profile => {
-        this.userProfileSubject.next(profile);
-        const plan = profile.isPremium ? UserPlan.PRO : UserPlan.FREE;
-        this.userPlanSubject.next(plan);
-        // Store profile in localStorage for quick access
-        localStorage.setItem('userProfile', JSON.stringify(profile));
-      },
-      error => console.error('Error loading user profile:', error)
-    );
+    this.authState.refreshCurrentUser().subscribe();
   }
 
-  // Update user profile
-  updateUserProfile(data: Partial<UserProfile>): Observable<UserProfile> {
-    return this.http.put<UserProfile>(`${this.apiUrl}/profile`, data).pipe(
-      tap(profile => {
-        this.userProfileSubject.next(profile);
-        const plan = profile.isPremium ? UserPlan.PRO : UserPlan.FREE;
-        this.userPlanSubject.next(plan);
-      })
-    );
-  }
-
-  // Upgrade to premium
-  upgradeToPremium(): Observable<UserProfile> {
-    return this.http.post<UserProfile>(`${this.apiUrl}/upgrade-premium`, {}).pipe(
-      tap(profile => {
-        this.userProfileSubject.next(profile);
-        this.userPlanSubject.next(UserPlan.PRO);
-      })
-    );
-  }
-
-  // Get current user plan
   getCurrentPlan(): UserPlan {
-    return this.userPlanSubject.value;
+    return this.authState.getCurrentPlan();
   }
 
-  // Check if user is premium
   isPremium(): boolean {
-    return this.getCurrentPlan() === UserPlan.PRO;
+    return this.authState.isProUser();
   }
 
-  // Get current user profile
   getCurrentProfile(): UserProfile | null {
-    return this.userProfileSubject.value;
+    return this.authState.getCurrentUser();
+  }
+
+  isProUser(): boolean {
+    return this.authState.isProUser();
+  }
+
+  isFreeUser(): boolean {
+    return this.authState.isFreeUser();
   }
 }
