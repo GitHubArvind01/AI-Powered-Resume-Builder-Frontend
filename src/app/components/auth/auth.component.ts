@@ -66,7 +66,7 @@ export class AuthComponent implements OnInit {
     this.authService.login(credentials).subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard'])
+        this.router.navigate([this.authService.isAdmin() ? '/admin' : '/dashboard'])
       },
       error: (err) => {
         this.isLoading = false;
@@ -126,8 +126,7 @@ export class AuthComponent implements OnInit {
     this.authService.registerVerify(this.authData.email, this.otpValue).subscribe({
       next: (res) => {
         this.isLoading = false;
-        // alert("Registration Successful!");
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([this.authService.isAdmin() ? '/admin' : '/dashboard']);
       },
       error: (err) => {
         this.isLoading = false;
@@ -186,7 +185,7 @@ export class AuthComponent implements OnInit {
     this.authService.handleGoogleCallback(code).subscribe({
       next: () => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard'])
+        this.router.navigate([this.authService.isAdmin() ? '/admin' : '/dashboard'])
       },
       error: (err) => {
         this.showError(this.extractMessage(err));
