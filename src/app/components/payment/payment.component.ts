@@ -62,9 +62,8 @@ export class PaymentComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    // Check if user is already premium
     this.userService.userProfile$.subscribe(profile => {
-      if (profile?.isPremium && !this.paymentService.isPaymentInProgress()) {
+      if (profile && this.userService.isPremium() && !this.paymentService.isPaymentInProgress()) {
         this.router.navigate(['/dashboard']);
       }
     });

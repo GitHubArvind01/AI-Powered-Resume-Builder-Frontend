@@ -12,13 +12,13 @@
     <div class="pricing-section">
       <h2>Choose Your Plan</h2>
       <div class="pricing-cards">
-        <div 
-          *ngFor="let plan of plans" 
+        <div
+          *ngFor="let plan of plans"
           [class.selected]="selectedPlan === plan.id"
           [class.popular]="plan.popular"
           class="pricing-card"
           (click)="selectPlan(plan.id)">
-          
+
           <!-- Popular Badge -->
           <div *ngIf="plan.popular" class="popular-badge">
             MOST POPULAR
@@ -41,7 +41,7 @@
             </li>
           </ul>
 
-          <button 
+          <button
             [class.selected]="selectedPlan === plan.id"
             class="select-btn">
             {{ selectedPlan === plan.id ? '✓ Selected' : 'Select Plan' }}
@@ -54,7 +54,7 @@
     <div class="payment-method-section">
       <h2>Select Payment Method</h2>
       <div class="payment-methods">
-        <div 
+        <div
           *ngFor="let method of paymentMethods"
           [class.selected]="paymentMethod === method.id"
           class="method-card"
@@ -90,7 +90,7 @@
     </div>
 
     <!-- Payment Button -->
-    <button 
+    <button
       class="pay-btn"
       [disabled]="isProcessing"
       (click)="initiatePayment()">
