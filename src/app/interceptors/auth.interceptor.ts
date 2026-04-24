@@ -1,12 +1,12 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
+import { AuthStateService } from '../services/auth-state.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
-  const token = localStorage.getItem('token');
-  
+  const authState = inject(AuthStateService);
+  const token = authState.getToken();
+
   let authReq = req;
   if (token) {
     authReq = req.clone({
@@ -16,10 +16,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Check if error is 401 (Unauthorized) or 403 (Forbidden)
-      if (error.status === 401) {
-        localStorage.removeItem('token'); // Clear the invalid token
-        router.navigate(['/auth']);       // Redirect to login
+      // if (error.status === 401) {
+      //   authState.clearSession();
+      // }
+      if (error.status === 401 && !req.url.includes('/users/me')) {
+        authState.clearSession();
       }
       return throwError(() => error);
     })
