@@ -23,6 +23,7 @@ export class DashboardComponent implements OnInit {
   userProfile: UserProfile | null = null;
   userPlan: UserPlan = UserPlan.FREE;
   userResumes: Resume[] = [];
+  isAdmin = false;
   isLoading = false;
   isProcessing = false;
   showProfileDropdown = false;
@@ -30,6 +31,7 @@ export class DashboardComponent implements OnInit {
   uploadError: string | null = null;
 
   ngOnInit(): void {
+    this.isAdmin = this.authService.isAdmin();
     this.loadUserProfile();
     this.loadUserResumes();
   }
@@ -134,6 +136,10 @@ export class DashboardComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
+  }
+
+  openAdminPanel(): void {
+    this.router.navigate(['/admin']);
   }
 
   upgradeProfile(): void {

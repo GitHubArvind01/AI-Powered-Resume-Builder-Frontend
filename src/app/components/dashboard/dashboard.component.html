@@ -40,6 +40,9 @@
             <button class="dropdown-item" (click)="viewProfile()">
               👤 View Profile
             </button>
+            <button *ngIf="isAdmin" class="dropdown-item" (click)="openAdminPanel()">
+              Admin Panel
+            </button>
             <button
               *ngIf="userPlan === 'free'"
               class="dropdown-item upgrade-item"
@@ -65,6 +68,7 @@
         <span *ngIf="userPlan === 'free'">You're on the <strong>Free Plan</strong>. <a routerLink="/payment">Upgrade to Pro</a> to unlock premium templates.</span>
         <span *ngIf="userPlan === 'pro'">You're on the <strong>Pro Plan</strong>. Enjoy all premium features! ⭐</span>
       </p>
+      <button *ngIf="isAdmin" class="action-btn ats-btn" (click)="openAdminPanel()">Open Admin Panel</button>
     </section>
 
     <!-- Quick Stats -->
