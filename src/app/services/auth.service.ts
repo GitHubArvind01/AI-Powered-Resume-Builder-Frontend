@@ -64,8 +64,36 @@ export class AuthService {
     return this.authState.isLoggedIn();
   }
 
-  getToken() {
+  getToken(): string | null {
     return this.authState.getToken();
+  }
+
+  decodeToken() {
+    return this.authState.decodeToken();
+  }
+
+  getRole(): string | null {
+    return this.authState.getCurrentRole();
+  }
+
+  getSubscriptionPlan(): string {
+    return this.authState.getSubscriptionPlan();
+  }
+
+  getUserId(): number | null {
+    return this.authState.getCurrentUserId();
+  }
+
+  getEmail(): string | null {
+    return this.authState.decodeToken()?.sub ?? null;
+  }
+
+  isAdmin(): boolean {
+    return this.authState.isAdmin();
+  }
+
+  isTokenValid(): boolean {
+    return this.authState.isTokenValid();
   }
 
   initiateGoogleLogin() {

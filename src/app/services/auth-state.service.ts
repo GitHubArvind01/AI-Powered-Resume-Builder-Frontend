@@ -4,10 +4,8 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { AuthResponse, UserPlan, UserProfile } from '../models/template.model';
+import { AuthResponse, JwtPayload, UserPlan, UserProfile } from '../models/template.model';
 
-// Detect if the user has just returned from a PayPal redirect.
-// PayPal appends query params like ?paymentId=... or ?token=...
 function isPaymentReturnUrl(): boolean {
   const search = window.location.search;
   return (
@@ -18,89 +16,57 @@ function isPaymentReturnUrl(): boolean {
   );
 }
 
-interface AuthMeta {
-  role: string | null;
-  subscriptionPlan: string | null;
-}
-
 @Injectable({ providedIn: 'root' })
 export class AuthStateService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
   private readonly tokenKey = 'token';
-  private readonly metaKey = 'auth_meta';
-  private readonly userKey = 'auth_user';
   private readonly userApiUrl = `${environment.gatewayUrl}/users`;
 
   private tokenSubject = new BehaviorSubject<string | null>(localStorage.getItem(this.tokenKey));
   readonly token$ = this.tokenSubject.asObservable();
 
-  private authMetaSubject = new BehaviorSubject<AuthMeta>(this.readStoredMeta());
-  readonly authMeta$ = this.authMetaSubject.asObservable();
-
-  private userSubject = new BehaviorSubject<UserProfile | null>(this.readStoredUser());
+  private userSubject = new BehaviorSubject<UserProfile | null>(null);
   readonly user$ = this.userSubject.asObservable();
 
   initialize(): Observable<UserProfile | null> {
-    if (!this.getToken()) {
-      // No token at all — clear any stale meta and stay on current page
+    if (!this.isLoggedIn()) {
       this.clearSession(false);
       return of(null);
     }
 
-    // If the user just returned from a PayPal redirect, skip the /me call
-    // during initialization. PaymentSuccessComponent will call /me itself
-    // after verifying the payment, so we don't risk a race-condition logout.
     if (isPaymentReturnUrl()) {
       return of(null);
     }
 
     return this.refreshCurrentUser().pipe(
-      catchError(() => {
-        // /me failed but we still have a token — do NOT clear session.
-        // The token may be perfectly valid; /me could fail due to a cold-start
-        // latency spike or a transient network error. Clearing here is what
-        // was logging users out after payment.
-        return of(null);
-      })
+      catchError(() => of(null))
     );
   }
 
   setSession(response: AuthResponse): void {
     localStorage.setItem(this.tokenKey, response.token);
-
-    const authMeta: AuthMeta = {
-      role: response.role ?? null,
-      subscriptionPlan: response.subscriptionPlan ?? 'FREE'
-    };
-
-    localStorage.setItem(this.metaKey, JSON.stringify(authMeta));
     this.tokenSubject.next(response.token);
-    this.authMetaSubject.next(authMeta);
   }
 
   refreshCurrentUser(): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.userApiUrl}/me`).pipe(
       tap((user) => {
+        if (!user.active) {
+          this.clearSession();
+          throw new Error('Your account has been deactivated.');
+        }
+
         this.userSubject.next(user);
-        localStorage.setItem(this.userKey, JSON.stringify(user));
-        this.authMetaSubject.next({
-          role: user.role,
-          subscriptionPlan: user.subscriptionPlan
-        });
-        localStorage.setItem(this.metaKey, JSON.stringify(this.authMetaSubject.value));
       })
     );
   }
 
   clearSession(redirectToAuth: boolean = true): void {
     localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.metaKey);
-    localStorage.removeItem(this.userKey);
     this.tokenSubject.next(null);
     this.userSubject.next(null);
-    this.authMetaSubject.next({ role: null, subscriptionPlan: null });
 
     if (redirectToAuth) {
       this.router.navigate(['/auth']);
@@ -111,8 +77,40 @@ export class AuthStateService {
     return this.tokenSubject.value;
   }
 
+  decodeToken(token: string | null = this.getToken()): JwtPayload | null {
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const payload = token.split('.')[1];
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = normalized.padEnd(normalized.length + ((4 - normalized.length % 4) % 4), '=');
+      const decoded = decodeURIComponent(
+        window
+          .atob(padded)
+          .split('')
+          .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
+          .join('')
+      );
+
+      return JSON.parse(decoded) as JwtPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  isTokenValid(token: string | null = this.getToken()): boolean {
+    const payload = this.decodeToken(token);
+    if (!payload?.exp) {
+      return false;
+    }
+
+    return payload.exp * 1000 > Date.now();
+  }
+
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return !!this.getToken() && this.isTokenValid();
   }
 
   getCurrentUser(): UserProfile | null {
@@ -120,20 +118,15 @@ export class AuthStateService {
   }
 
   getCurrentUserId(): number | null {
-    const userId = this.userSubject.value?.id;
-    if (userId) {
-      return userId;
-    }
-
-    return this.decodeUserIdFromToken(this.getToken());
+    return this.userSubject.value?.id ?? (this.decodeToken()?.userId ? Number(this.decodeToken()?.userId) : null);
   }
 
   getCurrentRole(): string | null {
-    return this.userSubject.value?.role ?? this.authMetaSubject.value.role;
+    return this.decodeToken()?.role ?? null;
   }
 
   getSubscriptionPlan(): string {
-    return (this.userSubject.value?.subscriptionPlan ?? this.authMetaSubject.value.subscriptionPlan ?? 'FREE').toUpperCase();
+    return (this.decodeToken()?.subscriptionPlan ?? 'FREE').toUpperCase();
   }
 
   getCurrentPlan(): UserPlan {
@@ -148,42 +141,7 @@ export class AuthStateService {
     return !this.isProUser();
   }
 
-  private readStoredMeta(): AuthMeta {
-    const rawMeta = localStorage.getItem(this.metaKey);
-    if (!rawMeta) {
-      return { role: null, subscriptionPlan: null };
-    }
-
-    try {
-      return JSON.parse(rawMeta) as AuthMeta;
-    } catch {
-      return { role: null, subscriptionPlan: null };
-    }
-  }
-
-  private readStoredUser(): UserProfile | null {
-    const rawUser = localStorage.getItem(this.userKey);
-    if (!rawUser) {
-      return null;
-    }
-
-    try {
-      return JSON.parse(rawUser) as UserProfile;
-    } catch {
-      return null;
-    }
-  }
-
-  private decodeUserIdFromToken(token: string | null): number | null {
-    if (!token) {
-      return null;
-    }
-
-    try {
-      const payload = JSON.parse(window.atob(token.split('.')[1]));
-      return payload.userId ? Number(payload.userId) : null;
-    } catch {
-      return null;
-    }
+  isAdmin(): boolean {
+    return this.getCurrentRole() === 'ADMIN';
   }
 }
