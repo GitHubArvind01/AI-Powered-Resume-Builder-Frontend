@@ -1,7 +1,6 @@
-import { Component, inject, OnInit, Input } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ResumeService } from '../../services/resume.service';
 import { TemplateDataService } from '../../services/template-data.service';
 import { UserService } from '../../services/user.service';
 import { Template, UserPlan } from '../../models/template.model';
@@ -29,7 +28,6 @@ import { trigger, transition, style, animate } from '@angular/animations';
   ]
 })
 export class TemplatesComponent implements OnInit {
-  private resumeService = inject(ResumeService);
   private templateDataService = inject(TemplateDataService);
   private userService = inject(UserService);
   private router = inject(Router);
@@ -61,39 +59,33 @@ export class TemplatesComponent implements OnInit {
   }
 
   loadTemplates(): void {
-    this.templateDataService.getAllTemplates().subscribe(
-      templates => {
+    this.templateDataService.getAllTemplates().subscribe({
+      next: (templates) => {
         this.templates = templates;
         this.filterTemplates();
         this.isLoading = false;
       },
-      error => {
+      error: (error) => {
         console.error('Error loading templates:', error);
         this.isLoading = false;
       }
-    );
+    });
   }
 
   loadUserPlan(): void {
-    this.userService.userPlan$.subscribe(
-      plan => {
-        this.currentUserPlan = plan;
-      }
-    );
+    this.userService.userPlan$.subscribe((plan) => {
+      this.currentUserPlan = plan;
+      this.filterTemplates();
+    });
   }
 
   filterTemplates(): void {
     let filtered = this.templates;
-    
-    // If user is free, only show free templates
-    if (this.currentUserPlan === UserPlan.FREE) {
-      filtered = filtered.filter(t => !t.isPro);
-    }
-    
+
     if (this.selectedCategory !== 'all') {
-      filtered = filtered.filter(t => t.category === this.selectedCategory);
+      filtered = filtered.filter((template) => template.category === this.selectedCategory);
     }
-    
+
     this.filteredTemplates = filtered.slice(0, this.maxTemplates);
   }
 
@@ -108,13 +100,9 @@ export class TemplatesComponent implements OnInit {
       this.showUpgradeModal = true;
       return;
     }
-    this.createResumeFromTemplate(template);
-  }
 
-  createResumeFromTemplate(template: Template): void {
-    // Navigate to create resume with template
-    this.router.navigate(['/resume/create'], { 
-      queryParams: { templateId: template.id } 
+    this.router.navigate(['/resume/create'], {
+      queryParams: { templateId: template.id }
     });
   }
 
@@ -129,10 +117,14 @@ export class TemplatesComponent implements OnInit {
   }
 
   getTemplateLabel(template: Template): string {
-    return template.isPro ? '⭐ PRO' : '🆓 FREE';
+    return template.isPro ? 'PRO' : 'FREE';
   }
 
-    getPlanColor(template: Template): string {
+  getPlanColor(template: Template): string {
     return template.isPro ? 'pro-badge' : 'free-badge';
+  }
+
+  isLocked(template: Template): boolean {
+    return template.isPro && this.currentUserPlan === UserPlan.FREE;
   }
 }
