@@ -25,7 +25,7 @@
       <div class="profile-section">
         <button class="profile-btn" (click)="toggleProfileDropdown()">
           <span class="profile-icon">👤</span>
-          <span class="profile-name">{{ userProfile?.name || 'User' }}</span>
+          <span class="profile-name">{{ userProfile?.fullName || 'User' }}</span>
         </button>
 
         <!-- Dropdown Menu -->
@@ -40,9 +40,9 @@
             <button class="dropdown-item" (click)="viewProfile()">
               👤 View Profile
             </button>
-            <button 
-              *ngIf="userPlan === 'free'" 
-              class="dropdown-item upgrade-item" 
+            <button
+              *ngIf="userPlan === 'free'"
+              class="dropdown-item upgrade-item"
               (click)="upgradeProfile()">
               ⭐ Upgrade to Pro
             </button>
@@ -60,9 +60,9 @@
   <main class="dashboard-main">
     <!-- Welcome Section -->
     <section class="welcome-section">
-      <h2>Welcome back, {{ userProfile?.name || 'User' }}! 👋</h2>
+      <h2>Welcome back, {{ userProfile?.fullName || 'User' }}! 👋</h2>
       <p>
-        <span *ngIf="userPlan === 'free'">You're on the <strong>Free Plan</strong>. <a href="#" (click)="upgradeProfile()">Upgrade to Pro</a> to unlock premium templates.</span>
+        <span *ngIf="userPlan === 'free'">You're on the <strong>Free Plan</strong>. <a routerLink="/payment">Upgrade to Pro</a> to unlock premium templates.</span>
         <span *ngIf="userPlan === 'pro'">You're on the <strong>Pro Plan</strong>. Enjoy all premium features! ⭐</span>
       </p>
     </section>
@@ -166,11 +166,11 @@
   </main>
 
   <!-- Hidden file input for upload -->
-  <input 
-    #fileInput 
-    type="file" 
-    id="fileInput" 
-    accept=".pdf,.doc,.docx" 
+  <input
+    #fileInput
+    type="file"
+    id="fileInput"
+    accept=".pdf,.doc,.docx"
     style="display: none;"
     (change)="onFileSelected($event)">
 

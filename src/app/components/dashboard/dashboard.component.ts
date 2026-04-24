@@ -1,15 +1,16 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import { TemplatesComponent } from '../templates/templates.component';
 import { UserService } from '../../services/user.service';
 import { ResumeService } from '../../services/resume.service';
+import { AuthService } from '../../services/auth.service';
 import { UserProfile, UserPlan, Resume } from '../../models/template.model';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, TemplatesComponent],
+  imports: [CommonModule, TemplatesComponent, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -17,6 +18,7 @@ export class DashboardComponent implements OnInit {
   private router = inject(Router);
   private userService = inject(UserService);
   private resumeService = inject(ResumeService);
+  private authService = inject(AuthService);
 
   userProfile: UserProfile | null = null;
   userPlan: UserPlan = UserPlan.FREE;
@@ -99,6 +101,14 @@ export class DashboardComponent implements OnInit {
   }
 
   performAtsCheck(resumeId: string): void {
+    if (resumeId === 'current') {
+      if (!this.userResumes.length) {
+        this.uploadError = 'Create a resume first to run ATS analysis.';
+        return;
+      }
+      resumeId = this.userResumes[0].id;
+    }
+
     this.isProcessing = true;
     this.resumeService.performAtsCheck(resumeId).subscribe(
       result => {
@@ -123,8 +133,7 @@ export class DashboardComponent implements OnInit {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
-    this.router.navigate(['/']);
+    this.authService.logout();
   }
 
   upgradeProfile(): void {
@@ -150,7 +159,6 @@ export class DashboardComponent implements OnInit {
   }
 
   downloadResume(resumeId: string): void {
-    // Implement download functionality
-    alert('Download feature coming soon!');
+    this.router.navigate([`/resume/${resumeId}/edit`]);
   }
 }
