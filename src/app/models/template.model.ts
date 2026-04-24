@@ -29,9 +29,67 @@ export interface UserProfile {
 
 export interface AuthResponse {
   token: string;
+  message?: string;
+}
+
+export interface JwtPayload {
+  sub: string;
+  exp: number;
+  iat?: number;
+  userId?: number;
+  role?: string;
+  subscriptionPlan?: string;
+}
+
+export interface AdminUserSummary {
+  id: number;
+  fullName: string;
+  email: string;
   role: string;
   subscriptionPlan: string;
-  message?: string;
+  active: boolean;
+  createdAt: string;
+  resumeCount: number;
+}
+
+export interface AdminResume {
+  id: number;
+  title: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminUserDetails {
+  id: number;
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: string;
+  subscriptionPlan: string;
+  active: boolean;
+  createdAt: string;
+  resumeCount: number;
+  resumes: AdminResume[];
+}
+
+export interface AdminDashboardStats {
+  totalUsers: number;
+  activeUsers: number;
+  inactiveUsers: number;
+  premiumUsers: number;
+  freeUsers: number;
+  adminUsers: number;
+  regularUsers: number;
+}
+
+export interface AdminUpdateUserRequest {
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: string;
+  subscriptionPlan: string;
+  active: boolean;
 }
 
 export interface PaymentRequest {
