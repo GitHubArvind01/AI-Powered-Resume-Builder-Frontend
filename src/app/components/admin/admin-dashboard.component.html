@@ -1,0 +1,37 @@
+<section class="hero">
+  <div>
+    <p class="eyebrow">Admin Overview</p>
+    <h2>Monitor users, account health, and premium adoption from one place.</h2>
+  </div>
+  <a routerLink="/admin/users" class="cta">Open User Management</a>
+</section>
+
+<p *ngIf="isLoading" class="state">Loading dashboard metrics...</p>
+<p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
+
+<div *ngIf="stats" class="stats-grid">
+  <article class="stat-card">
+    <span>Total Users</span>
+    <strong>{{ stats.totalUsers }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Active Users</span>
+    <strong>{{ stats.activeUsers }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Premium Users</span>
+    <strong>{{ stats.premiumUsers }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Free Users</span>
+    <strong>{{ stats.freeUsers }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Inactive Users</span>
+    <strong>{{ stats.inactiveUsers }}</strong>
+  </article>
+  <article class="stat-card">
+    <span>Admins</span>
+    <strong>{{ stats.adminUsers }}</strong>
+  </article>
+</div>
