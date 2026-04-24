@@ -6,6 +6,18 @@ import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AuthResponse, UserPlan, UserProfile } from '../models/template.model';
 
+// Detect if the user has just returned from a PayPal redirect.
+// PayPal appends query params like ?paymentId=... or ?token=...
+function isPaymentReturnUrl(): boolean {
+  const search = window.location.search;
+  return (
+    window.location.pathname.includes('payment-success') ||
+    window.location.pathname.includes('payment-failed') ||
+    search.includes('paymentId') ||
+    search.includes('token')
+  );
+}
+
 interface AuthMeta {
   role: string | null;
   subscriptionPlan: string | null;
@@ -32,13 +44,24 @@ export class AuthStateService {
 
   initialize(): Observable<UserProfile | null> {
     if (!this.getToken()) {
+      // No token at all — clear any stale meta and stay on current page
       this.clearSession(false);
+      return of(null);
+    }
+
+    // If the user just returned from a PayPal redirect, skip the /me call
+    // during initialization. PaymentSuccessComponent will call /me itself
+    // after verifying the payment, so we don't risk a race-condition logout.
+    if (isPaymentReturnUrl()) {
       return of(null);
     }
 
     return this.refreshCurrentUser().pipe(
       catchError(() => {
-        this.clearSession();
+        // /me failed but we still have a token — do NOT clear session.
+        // The token may be perfectly valid; /me could fail due to a cold-start
+        // latency spike or a transient network error. Clearing here is what
+        // was logging users out after payment.
         return of(null);
       })
     );
