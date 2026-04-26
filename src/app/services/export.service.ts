@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -11,7 +11,18 @@ export class ExportService {
   private apiUrl = `${environment.gatewayUrl}/export`;
 
   exportAsPdf(resumeId: string): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/pdf`, { resumeId: Number(resumeId) }, { responseType: 'blob' });
+    const parsedResumeId = Number(resumeId);
+    if (!Number.isFinite(parsedResumeId)) {
+      return throwError(() => new Error('Please save the resume before exporting it as PDF.'));
+    }
+
+    return this.http.post(`${this.apiUrl}/pdf`, { resumeId: parsedResumeId }, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        Accept: 'application/pdf'
+      }),
+      responseType: 'blob'
+    });
   }
 
   exportAsDocx(resumeId: string): Observable<Blob> {
