@@ -123,6 +123,7 @@ export class AuthComponent implements OnInit {
   // --- OTP & Reset Logic ---
 
   verifyRegisterOtp() {
+    this.isLoading = true;
     this.authService.registerVerify(this.authData.email, this.otpValue).subscribe({
       next: (res) => {
         this.isLoading = false;
@@ -140,6 +141,7 @@ export class AuthComponent implements OnInit {
       this.showError("Please enter your email first.");
       return;
     }
+    this.isLoading = true;
     this.authService.forgotPasswordRequest(this.authData.email).subscribe({
       next: () => {
         this.isLoading = false;
@@ -154,6 +156,7 @@ export class AuthComponent implements OnInit {
   }
 
   verifyForgotOtp() {
+    this.isLoading = true;
     this.authService.verifyForgotOtp(this.authData.email, this.otpValue).subscribe({
       next: () => {
         this.isLoading = false;
@@ -167,6 +170,7 @@ export class AuthComponent implements OnInit {
   }
 
   submitNewPassword() {
+    this.isLoading = true;
     this.authService.resetPassword(this.authData.email, this.newPassword).subscribe({
       next: () => {
         this.isLoading = false;
@@ -174,6 +178,7 @@ export class AuthComponent implements OnInit {
         this.resetToLogin();
       },
       error: (err) => {
+        this.isLoading = false;
         this.showError(this.extractMessage(err));
       }
     });
@@ -182,18 +187,21 @@ export class AuthComponent implements OnInit {
   // --- Helpers ---
 
   private processGoogleLogin(code: string) {
+    this.isLoading = true;
     this.authService.handleGoogleCallback(code).subscribe({
       next: () => {
         this.isLoading = false;
         this.router.navigate([this.authService.isAdmin() ? '/admin' : '/dashboard'])
       },
       error: (err) => {
+        this.isLoading = false;
         this.showError(this.extractMessage(err));
       }
     });
   }
 
   loginWithGoogle() {
+    this.isLoading = true;
     this.authService.initiateGoogleLogin();
   }
 
