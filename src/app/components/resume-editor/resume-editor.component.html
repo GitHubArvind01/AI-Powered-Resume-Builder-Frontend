@@ -1,126 +1,84 @@
 <div class="editor-container">
-  <!-- Header -->
   <header class="editor-header">
     <div class="header-left">
-      <button class="back-btn" (click)="goBack()">← Back</button>
+      <button class="back-btn" (click)="goBack()">Back</button>
       <div class="title-section">
         <h1>{{ resume?.title || 'New Resume' }}</h1>
-        <span *ngIf="isSaving" class="saving-indicator">💾 Saving...</span>
+        <span *ngIf="isSaving" class="saving-indicator">Saving...</span>
       </div>
     </div>
 
     <div class="header-actions">
-      <button 
-        class="action-btn ats-btn" 
-        (click)="performAtsCheck()"
-        [disabled]="isLoading">
-        ✓ ATS Check
+      <button class="action-btn ats-btn" (click)="performAtsCheck()" [disabled]="isCheckingAts || isLoading">
+        <span *ngIf="!isCheckingAts">ATS Check</span>
+        <span *ngIf="isCheckingAts" class="btn-spinner"></span>
       </button>
-      <button 
-        class="action-btn export-btn" 
-        [disabled]="isExporting"
-        (click)="showExportMenu()">
-        📥 Export
+      <button class="action-btn export-btn" [disabled]="isExporting" (click)="showExportMenu()">
+        <span *ngIf="!isExporting">Export</span>
+        <span *ngIf="isExporting" class="btn-spinner"></span>
       </button>
       <button class="action-btn save-btn" (click)="saveResume()" [disabled]="isSaving">
-        💾 Save
+        <span *ngIf="!isSaving">Save</span>
+        <span *ngIf="isSaving" class="btn-spinner"></span>
       </button>
     </div>
   </header>
 
-  <!-- Main Content -->
   <div class="editor-content" *ngIf="resume && resumeForm">
-    <!-- Left Panel: Editor -->
     <div class="editor-panel">
       <form [formGroup]="resumeForm" class="editor-form">
-        <!-- Resume Title -->
         <div class="form-group">
           <label>Resume Title</label>
-          <input 
-            type="text" 
-            formControlName="title" 
-            class="form-input"
-            placeholder="My Resume">
+          <input type="text" formControlName="title" class="form-input" placeholder="My Resume">
         </div>
 
-        <!-- Sections -->
         <div class="sections-container">
-          <!-- Personal Information Section -->
           <div class="section-item">
-            <button 
-              type="button"
-              class="section-header"
-              (click)="toggleSection('personal')">
-              <span class="section-icon">👤</span>
+            <button type="button" class="section-header" (click)="toggleSection('personal')">
               <span class="section-title">Personal Information</span>
-              <span class="toggle-icon">{{ sections[0].expanded ? '▼' : '▶' }}</span>
+              <span class="toggle-icon">{{ sections[0].expanded ? 'v' : '>' }}</span>
             </button>
 
             <div class="section-content" *ngIf="sections[0].expanded" [@slideIn]>
               <div formGroupName="personalInfo" class="form-grid">
                 <div class="form-group">
                   <label>Full Name *</label>
-                  <input 
-                    type="text" 
-                    formControlName="fullName"
-                    class="form-input"
-                    placeholder="John Doe">
-                  <span class="ai-improve-btn" (click)="improveContent('personalInfo.fullName')">✨ Improve</span>
+                  <input type="text" formControlName="fullName" class="form-input" placeholder="John Doe">
                 </div>
 
                 <div class="form-group">
                   <label>Email *</label>
-                  <input 
-                    type="email" 
-                    formControlName="email"
-                    class="form-input"
-                    placeholder="john@example.com">
+                  <input type="email" formControlName="email" class="form-input" placeholder="john@example.com">
                 </div>
 
                 <div class="form-group">
                   <label>Phone</label>
-                  <input 
-                    type="tel" 
-                    formControlName="phone"
-                    class="form-input"
-                    placeholder="+1 (555) 123-4567">
+                  <input type="tel" formControlName="phone" class="form-input" placeholder="+1 (555) 123-4567">
                 </div>
 
                 <div class="form-group">
                   <label>Location</label>
-                  <input 
-                    type="text" 
-                    formControlName="location"
-                    class="form-input"
-                    placeholder="New York, NY">
+                  <input type="text" formControlName="location" class="form-input" placeholder="New York, NY">
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Professional Summary Section -->
           <div class="section-item">
-            <button 
-              type="button"
-              class="section-header"
-              (click)="toggleSection('summary')">
-              <span class="section-icon">📝</span>
+            <button type="button" class="section-header" (click)="toggleSection('summary')">
               <span class="section-title">Professional Summary</span>
-              <span class="toggle-icon">{{ sections[1].expanded ? '▼' : '▶' }}</span>
+              <span class="toggle-icon">{{ sections[1].expanded ? 'v' : '>' }}</span>
             </button>
 
             <div class="section-content" *ngIf="sections[1].expanded" [@slideIn]>
               <div class="form-group">
                 <label>Summary</label>
-                <textarea 
-                  formControlName="summary"
-                  class="form-textarea"
-                  rows="5"
-                  placeholder="Write a brief professional summary..."></textarea>
+                <textarea formControlName="summary" class="form-textarea" rows="5" placeholder="Write a brief professional summary..."></textarea>
                 <div class="form-actions">
-                  <span class="ai-improve-btn" (click)="improveContent('summary')">
-                    ✨ Improve with AI
-                  </span>
+                  <button type="button" class="ai-improve-btn" [disabled]="isAiLoading('summary')" (click)="improveContent('summary')">
+                    <span *ngIf="!isAiLoading('summary')">Improve with AI</span>
+                    <span *ngIf="isAiLoading('summary')" class="btn-spinner dark"></span>
+                  </button>
                   <span class="ai-counter" *ngIf="userPlan === 'free'">
                     {{ aiRemaining }} improvements left
                   </span>
@@ -129,185 +87,108 @@
             </div>
           </div>
 
-          <!-- Experience Section -->
           <div class="section-item">
-            <button 
-              type="button"
-              class="section-header"
-              (click)="toggleSection('experience')">
-              <span class="section-icon">💼</span>
+            <button type="button" class="section-header" (click)="toggleSection('experience')">
               <span class="section-title">Experience</span>
-              <span class="toggle-icon">{{ sections[2].expanded ? '▼' : '▶' }}</span>
+              <span class="toggle-icon">{{ sections[2].expanded ? 'v' : '>' }}</span>
             </button>
 
             <div class="section-content" *ngIf="sections[2].expanded" [@slideIn]>
               <div formArrayName="experience" class="array-items">
-                <div *ngFor="let exp of experienceArray.controls; let i = index" 
-                     class="array-item"
-                     [formGroupName]="i">
+                <div *ngFor="let exp of experienceArray.controls; let i = index" class="array-item" [formGroupName]="i">
                   <div class="array-header">
                     <h4>Job Experience {{ i + 1 }}</h4>
-                    <button 
-                      type="button"
-                      class="remove-btn"
-                      (click)="removeExperience(i)">✕</button>
+                    <button type="button" class="remove-btn" (click)="removeExperience(i)">Remove</button>
                   </div>
 
                   <div class="form-grid">
                     <div class="form-group">
                       <label>Job Title</label>
-                      <input 
-                        type="text"
-                        formControlName="jobTitle"
-                        class="form-input"
-                        placeholder="Software Engineer">
+                      <input type="text" formControlName="jobTitle" class="form-input" placeholder="Software Engineer">
                     </div>
 
                     <div class="form-group">
                       <label>Company Name</label>
-                      <input 
-                        type="text"
-                        formControlName="companyName"
-                        class="form-input"
-                        placeholder="Company Name">
+                      <input type="text" formControlName="companyName" class="form-input" placeholder="Company Name">
                     </div>
 
                     <div class="form-group">
                       <label>Start Date</label>
-                      <input 
-                        type="month"
-                        formControlName="startDate"
-                        class="form-input">
+                      <input type="month" formControlName="startDate" class="form-input">
                     </div>
 
                     <div class="form-group">
                       <label>End Date</label>
-                      <input 
-                        type="month"
-                        formControlName="endDate"
-                        class="form-input">
+                      <input type="month" formControlName="endDate" class="form-input">
                     </div>
                   </div>
 
                   <div class="form-group">
                     <label>Responsibilities (one per line)</label>
-                    <textarea 
-                      formControlName="responsibilities"
-                      class="form-textarea"
-                      rows="4"
-                      placeholder="• Achievement 1&#10;• Achievement 2"></textarea>
-                    <span class="ai-improve-btn" (click)="improveContent('experience.' + i + '.responsibilities')">
-                      ✨ Enhance bullets
-                    </span>
+                    <textarea formControlName="responsibilities" class="form-textarea" rows="4" placeholder="Achievement 1&#10;Achievement 2"></textarea>
+                    <button type="button" class="ai-improve-btn" [disabled]="isAiLoading('experience.' + i + '.responsibilities')" (click)="improveContent('experience.' + i + '.responsibilities')">
+                      <span *ngIf="!isAiLoading('experience.' + i + '.responsibilities')">Enhance bullets</span>
+                      <span *ngIf="isAiLoading('experience.' + i + '.responsibilities')" class="btn-spinner dark"></span>
+                    </button>
                   </div>
                 </div>
 
-                <button 
-                  type="button"
-                  class="add-btn"
-                  (click)="addExperience()">
-                  + Add Experience
-                </button>
+                <button type="button" class="add-btn" (click)="addExperience()">Add Experience</button>
               </div>
             </div>
           </div>
 
-          <!-- Education Section -->
           <div class="section-item">
-            <button 
-              type="button"
-              class="section-header"
-              (click)="toggleSection('education')">
-              <span class="section-icon">🎓</span>
+            <button type="button" class="section-header" (click)="toggleSection('education')">
               <span class="section-title">Education</span>
-              <span class="toggle-icon">{{ sections[3].expanded ? '▼' : '▶' }}</span>
+              <span class="toggle-icon">{{ sections[3].expanded ? 'v' : '>' }}</span>
             </button>
 
             <div class="section-content" *ngIf="sections[3].expanded" [@slideIn]>
               <div formArrayName="education" class="array-items">
-                <div *ngFor="let edu of educationArray.controls; let i = index"
-                     class="array-item"
-                     [formGroupName]="i">
+                <div *ngFor="let edu of educationArray.controls; let i = index" class="array-item" [formGroupName]="i">
                   <div class="array-header">
                     <h4>Education {{ i + 1 }}</h4>
-                    <button 
-                      type="button"
-                      class="remove-btn"
-                      (click)="removeEducation(i)">✕</button>
+                    <button type="button" class="remove-btn" (click)="removeEducation(i)">Remove</button>
                   </div>
 
                   <div class="form-grid">
                     <div class="form-group">
                       <label>Degree</label>
-                      <input 
-                        type="text"
-                        formControlName="degree"
-                        class="form-input"
-                        placeholder="Bachelor of Science">
+                      <input type="text" formControlName="degree" class="form-input" placeholder="Bachelor of Science">
                     </div>
 
                     <div class="form-group">
                       <label>School/University</label>
-                      <input 
-                        type="text"
-                        formControlName="school"
-                        class="form-input"
-                        placeholder="University Name">
+                      <input type="text" formControlName="school" class="form-input" placeholder="University Name">
                     </div>
 
                     <div class="form-group">
                       <label>Graduation Date</label>
-                      <input 
-                        type="month"
-                        formControlName="graduationDate"
-                        class="form-input">
+                      <input type="month" formControlName="graduationDate" class="form-input">
                     </div>
                   </div>
                 </div>
 
-                <button 
-                  type="button"
-                  class="add-btn"
-                  (click)="addEducation()">
-                  + Add Education
-                </button>
+                <button type="button" class="add-btn" (click)="addEducation()">Add Education</button>
               </div>
             </div>
           </div>
 
-          <!-- Skills Section -->
           <div class="section-item">
-            <button 
-              type="button"
-              class="section-header"
-              (click)="toggleSection('skills')">
-              <span class="section-icon">⭐</span>
+            <button type="button" class="section-header" (click)="toggleSection('skills')">
               <span class="section-title">Skills</span>
-              <span class="toggle-icon">{{ sections[4].expanded ? '▼' : '▶' }}</span>
+              <span class="toggle-icon">{{ sections[4].expanded ? 'v' : '>' }}</span>
             </button>
 
             <div class="section-content" *ngIf="sections[4].expanded" [@slideIn]>
               <div formArrayName="skills" class="skills-items">
-                <div *ngFor="let skill of skillsArray.controls; let i = index"
-                     class="skill-item"
-                     [formGroupName]="i">
-                  <input 
-                    type="text"
-                    formControlName="skill"
-                    class="form-input"
-                    placeholder="e.g., Angular, TypeScript, React">
-                  <button 
-                    type="button"
-                    class="remove-btn"
-                    (click)="removeSkill(i)">✕</button>
+                <div *ngFor="let skill of skillsArray.controls; let i = index" class="skill-item" [formGroupName]="i">
+                  <input type="text" formControlName="skill" class="form-input" placeholder="Angular, TypeScript, Spring Boot">
+                  <button type="button" class="remove-btn" (click)="removeSkill(i)">Remove</button>
                 </div>
 
-                <button 
-                  type="button"
-                  class="add-btn"
-                  (click)="addSkill()">
-                  + Add Skill
-                </button>
+                <button type="button" class="add-btn" (click)="addSkill()">Add Skill</button>
               </div>
             </div>
           </div>
@@ -315,57 +196,41 @@
       </form>
     </div>
 
-    <!-- Right Panel: Live Preview -->
     <div class="preview-panel">
       <div class="preview-header">
         <h3>Live Preview</h3>
       </div>
 
       <div class="preview-container" #previewContainer>
-        <!-- Resume Preview -->
         <div class="resume-preview">
-          <!-- Header -->
           <div class="preview-header-section">
             <h1 class="preview-name">{{ resumeForm.get('personalInfo.fullName')?.value || 'Your Name' }}</h1>
             <div class="preview-contact">
-              <span *ngIf="resumeForm.get('personalInfo.email')?.value">
-                {{ resumeForm.get('personalInfo.email')?.value }}
-              </span>
-              <span *ngIf="resumeForm.get('personalInfo.phone')?.value">
-                | {{ resumeForm.get('personalInfo.phone')?.value }}
-              </span>
-              <span *ngIf="resumeForm.get('personalInfo.location')?.value">
-                | {{ resumeForm.get('personalInfo.location')?.value }}
-              </span>
+              <span *ngIf="resumeForm.get('personalInfo.email')?.value">{{ resumeForm.get('personalInfo.email')?.value }}</span>
+              <span *ngIf="resumeForm.get('personalInfo.phone')?.value"> | {{ resumeForm.get('personalInfo.phone')?.value }}</span>
+              <span *ngIf="resumeForm.get('personalInfo.location')?.value"> | {{ resumeForm.get('personalInfo.location')?.value }}</span>
             </div>
           </div>
 
-          <!-- Summary -->
           <div *ngIf="resumeForm.get('summary')?.value" class="preview-section">
             <h3 class="preview-section-title">Professional Summary</h3>
             <p class="preview-summary">{{ resumeForm.get('summary')?.value }}</p>
           </div>
 
-          <!-- Experience -->
           <div *ngIf="experienceArray.length > 0" class="preview-section">
             <h3 class="preview-section-title">Experience</h3>
             <div *ngFor="let exp of experienceArray.controls" class="preview-entry">
               <div class="entry-header">
                 <h4 class="entry-title">{{ exp.get('jobTitle')?.value || 'Job Title' }}</h4>
-                <span class="entry-dates">
-                  {{ exp.get('startDate')?.value }} - {{ exp.get('endDate')?.value || 'Present' }}
-                </span>
+                <span class="entry-dates">{{ exp.get('startDate')?.value }} - {{ exp.get('endDate')?.value || 'Present' }}</span>
               </div>
               <p class="entry-company">{{ exp.get('companyName')?.value || 'Company' }}</p>
               <ul class="entry-bullets" *ngIf="exp.get('responsibilities')?.value">
-                <li *ngFor="let responsibility of exp.get('responsibilities')?.value.split('\n')">
-                  {{ responsibility }}
-                </li>
+                <li *ngFor="let responsibility of exp.get('responsibilities')?.value.split('\n')">{{ responsibility }}</li>
               </ul>
             </div>
           </div>
 
-          <!-- Education -->
           <div *ngIf="educationArray.length > 0" class="preview-section">
             <h3 class="preview-section-title">Education</h3>
             <div *ngFor="let edu of educationArray.controls" class="preview-entry">
@@ -377,31 +242,27 @@
             </div>
           </div>
 
-          <!-- Skills -->
           <div *ngIf="skillsArray.length > 0" class="preview-section">
             <h3 class="preview-section-title">Skills</h3>
             <div class="skills-preview">
-              <span *ngFor="let skill of skillsArray.controls" class="skill-tag">
-                {{ skill.get('skill')?.value }}
-              </span>
+              <span *ngFor="let skill of skillsArray.controls" class="skill-tag">{{ skill.get('skill')?.value }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Export Options -->
       <div class="export-actions">
         <button class="export-pdf-btn" (click)="exportResume('pdf')" [disabled]="isExporting">
-          📄 Export as PDF
+          <span *ngIf="!isExporting">Export as PDF</span>
+          <span *ngIf="isExporting" class="btn-spinner"></span>
         </button>
         <button class="export-docx-btn" (click)="exportResume('docx')" [disabled]="isExporting">
-          📝 Export as DOCX
+          Export as DOCX
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-overlay">
     <div class="spinner"></div>
     <p>Loading...</p>

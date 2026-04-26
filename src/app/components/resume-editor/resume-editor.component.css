@@ -173,6 +173,12 @@
 
 /* AI Improve Button */
 .ai-improve-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  border: none;
+  background: transparent;
   color: #667eea;
   cursor: pointer;
   font-weight: 600;
@@ -185,6 +191,12 @@
 .ai-improve-btn:hover {
   background: rgba(102, 126, 234, 0.1);
   transform: scale(1.05);
+}
+
+.ai-improve-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+  transform: none;
 }
 
 .ai-counter {
@@ -527,6 +539,21 @@
   color: white;
   margin-top: 15px;
   font-weight: 600;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.btn-spinner.dark {
+  border-color: rgba(102, 126, 234, 0.2);
+  border-top-color: #667eea;
 }
 
 /* Responsive Design */

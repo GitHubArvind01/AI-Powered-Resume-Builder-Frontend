@@ -53,6 +53,8 @@ export class ResumeEditorComponent implements OnInit {
   isLoading = false;
   isSaving = false;
   isExporting = false;
+  isCheckingAts = false;
+  aiLoadingField: string | null = null;
   showAiModal = false;
   showStylePanel = false;
   selectedText: string = '';
@@ -258,6 +260,10 @@ export class ResumeEditorComponent implements OnInit {
   }
 
   improveContent(field: string): void {
+    if (this.aiLoadingField) {
+      return;
+    }
+
     if (!this.aiService.canUseAiFeatures()) {
       alert(`You've reached your daily limit. Upgrade to Pro for unlimited improvements!`);
       return;
@@ -268,17 +274,20 @@ export class ResumeEditorComponent implements OnInit {
 
     this.showAiModal = true;
     this.aiError = null;
-    this.aiService.improveContent({ text: content, type: 'general', resumeId: this.resume?.id }).subscribe(
+    this.aiLoadingField = field;
+    this.aiService.improveContent({ text: content, type: this.resolveAiType(field), resumeId: this.resume?.id }).subscribe(
       result => {
         this.resumeForm.patchValue({ [field]: result.improvedText });
         this.aiService.incrementUsage();
         this.aiRemaining = this.aiService.getRemainingImprovements();
         this.showAiModal = false;
+        this.aiLoadingField = null;
       },
       error => {
         console.error('AI error:', error);
         this.aiError = error?.error?.message || 'AI enhancement failed. Please try again.';
         this.showAiModal = false;
+        this.aiLoadingField = null;
       }
     );
   }
@@ -311,15 +320,15 @@ export class ResumeEditorComponent implements OnInit {
   performAtsCheck(): void {
     if (!this.resume) return;
 
-    this.isLoading = true;
+    this.isCheckingAts = true;
     this.resumeService.performAtsCheck(this.resume.id).subscribe(
       result => {
         alert(`ATS Score: ${result.score}/100\nIssues: ${result.issues.length}`);
-        this.isLoading = false;
+        this.isCheckingAts = false;
       },
       error => {
         console.error('ATS check error:', error);
-        this.isLoading = false;
+        this.isCheckingAts = false;
       }
     );
   }
@@ -350,7 +359,28 @@ export class ResumeEditorComponent implements OnInit {
   get skillsArray() {
     return this.resumeForm.get('skills') as any;
   }
-    showExportMenu(): void {
-        console.log('Export menu clicked');
+
+  isAiLoading(field: string): boolean {
+    return this.aiLoadingField === field;
+  }
+
+  showExportMenu(): void {
+    console.log('Export menu clicked');
+  }
+
+  private resolveAiType(field: string): 'summary' | 'bullets' | 'skills' | 'general' {
+    if (field === 'summary') {
+      return 'summary';
     }
+
+    if (field.includes('responsibilities')) {
+      return 'bullets';
+    }
+
+    if (field.startsWith('skills')) {
+      return 'skills';
+    }
+
+    return 'general';
+  }
 }
