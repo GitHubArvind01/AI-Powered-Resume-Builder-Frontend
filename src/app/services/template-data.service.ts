@@ -4,14 +4,18 @@ import { Template } from '../models/template.model';
 
 @Injectable({ providedIn: 'root' })
 export class TemplateDataService {
-  
   private templates: Template[] = [
-    // Professional Templates (FREE)
     {
       id: 'professional-classic',
       name: 'Professional Classic',
       description: 'Clean, timeless design perfect for corporate roles',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23f9fafb"/%3E%3Crect width="300" height="60" fill="%23667eea"/%3E%3Ctext x="20" y="40" font-size="24" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3Cline x1="20" y1="80" x2="280" y2="80" stroke="%23e0e0e0"/%3E%3Ctext x="20" y="110" font-size="12" fill="%23333"%3EProfessional Summary%3C/text%3E%3Crect x="20" y="125" width="260" height="40" fill="%23f0f1f3"/%3E%3C/svg%3E',
+      imageUrl: this.buildPreview({
+        accent: '#1d4ed8',
+        sidebar: false,
+        headerFill: '#eff6ff',
+        bodyFill: '#ffffff',
+        headingFill: '#1d4ed8'
+      }),
       isPro: false,
       category: 'professional'
     },
@@ -19,7 +23,14 @@ export class TemplateDataService {
       id: 'professional-minimal',
       name: 'Minimalist Pro',
       description: 'Elegant and distraction-free layout',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23fff"/%3E%3Ctext x="20" y="30" font-size="20" font-weight="bold" fill="%23333"%3EJohn Doe%3C/text%3E%3Cline x1="20" y1="45" x2="100" y2="45" stroke="%23333" stroke-width="2"/%3E%3Ctext x="20" y="70" font-size="11" fill="%23666"%3Nemail@example.com | +1 234 567 8900%3C/text%3E%3C/svg%3E',
+      imageUrl: this.buildPreview({
+        accent: '#111827',
+        sidebar: false,
+        headerFill: '#ffffff',
+        bodyFill: '#f8fafc',
+        headingFill: '#111827',
+        divider: '#d1d5db'
+      }),
       isPro: false,
       category: 'professional'
     },
@@ -27,161 +38,292 @@ export class TemplateDataService {
       id: 'professional-modern',
       name: 'Modern Professional',
       description: 'Contemporary design with sidebar layout',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="80" height="400" fill="%232d3748"/%3E%3Crect width="220" height="400" x="80" fill="%23fff"/%3E%3Ctext x="100" y="50" font-size="18" font-weight="bold" fill="%23fff"%3ESkills%3C/text%3E%3Ctext x="100" y="150" font-size="16" font-weight="bold" fill="%23333"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      imageUrl: this.buildPreview({
+        accent: '#0f172a',
+        sidebar: true,
+        sidebarFill: '#0f172a',
+        headerFill: '#ffffff',
+        bodyFill: '#ffffff',
+        headingFill: '#1e293b'
+      }),
       isPro: false,
       category: 'professional'
     },
-
-    // Modern Templates (FREE)
     {
       id: 'modern-sleek',
       name: 'Sleek Modern',
-      description: 'Cutting-edge design with bold colors',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="100" fill="%234f46e5"/%3E%3Ctext x="20" y="60" font-size="28" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3Crect y="100" width="300" height="300" fill="%23fafafa"/%3E%3C/svg%3E',
+      description: 'Cutting-edge design with bold color contrast',
+      imageUrl: this.buildPreview({
+        accent: '#0f766e',
+        sidebar: false,
+        headerFill: '#ccfbf1',
+        bodyFill: '#f8fafc',
+        headingFill: '#115e59'
+      }),
       isPro: false,
       category: 'modern'
     },
     {
       id: 'modern-gradient',
       name: 'Gradient Wave',
-      description: 'Eye-catching gradient design',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3CdEfs%3E%3ClinearGradient id="grad" x1="0%25" y1="0%25" x2="100%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23667eea;stop-opacity:1" /%3E%3Cstop offset="100%25" style="stop-color:%23764ba2;stop-opacity:1" /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="300" height="400" fill="url(%23grad)"/%3E%3Ctext x="20" y="200" font-size="28" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'High-contrast layout with polished hierarchy',
+      imageUrl: this.buildPreview({
+        accent: '#c2410c',
+        sidebar: false,
+        headerFill: '#ffedd5',
+        bodyFill: '#fff7ed',
+        headingFill: '#c2410c'
+      }),
       isPro: false,
       category: 'modern'
     },
-
-    // Creative Templates (FREE)
     {
       id: 'creative-colorful',
       name: 'Colorful Creative',
-      description: 'Vibrant colors for creative professionals',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="100" height="400" fill="%23ff6b6b"/%3E%3Crect x="100" width="100" height="400" fill="%234ecdc4"/%3E%3Crect x="200" width="100" height="400" fill="%23ffe66d"/%3E%3Ctext x="30" y="200" font-size="18" font-weight="bold" fill="%23fff" transform="rotate(-90 30 200)"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Vibrant editorial style for creative portfolios',
+      imageUrl: this.buildPreview({
+        accent: '#be123c',
+        sidebar: true,
+        sidebarFill: '#ffe4e6',
+        headerFill: '#ffffff',
+        bodyFill: '#fff1f2',
+        headingFill: '#be123c'
+      }),
       isPro: false,
       category: 'creative'
     },
-
-    // Minimal Templates (FREE)
     {
       id: 'minimal-clean',
       name: 'Clean Minimal',
-      description: 'Pure simplicity and clarity',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23fff"/%3E%3Ctext x="20" y="40" font-size="18" font-weight="bold" fill="%23000"%3EJohn Doe%3C/text%3E%3Cline x1="20" y1="50" x2="280" y2="50" stroke="%23000" stroke-width="2"/%3E%3C/svg%3E',
+      description: 'Pure simplicity with sharp typography',
+      imageUrl: this.buildPreview({
+        accent: '#334155',
+        sidebar: false,
+        headerFill: '#ffffff',
+        bodyFill: '#ffffff',
+        headingFill: '#334155',
+        divider: '#cbd5e1'
+      }),
       isPro: false,
       category: 'minimal'
     },
-
-    // ===== PRO TEMPLATES (LOCKED) =====
     {
       id: 'pro-executive',
       name: 'Executive Premium',
       description: 'Sophisticated design for senior positions',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%232c3e50"/%3E%3Crect x="50" y="50" width="200" height="300" fill="%23ecf0f1"/%3E%3Ctext x="60" y="100" font-size="20" font-weight="bold" fill="%232c3e50"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      imageUrl: this.buildPreview({
+        accent: '#7c2d12',
+        sidebar: false,
+        headerFill: '#fff7ed',
+        bodyFill: '#ffffff',
+        headingFill: '#9a3412',
+        premium: true
+      }),
       isPro: true,
       category: 'executive'
     },
     {
       id: 'pro-tech',
       name: 'Tech Innovator',
-      description: 'Perfect for tech and startup professionals',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%231e293b"/%3E%3Crect x="10" y="10" width="280" height="380" fill="%23334155" stroke="%2364748b" stroke-width="2"/%3E%3Ctext x="20" y="50" font-size="24" font-weight="bold" fill="%2306b6d4"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Structured layout for engineering and product roles',
+      imageUrl: this.buildPreview({
+        accent: '#0369a1',
+        sidebar: true,
+        sidebarFill: '#082f49',
+        headerFill: '#f0f9ff',
+        bodyFill: '#e0f2fe',
+        headingFill: '#0369a1',
+        premium: true
+      }),
       isPro: true,
       category: 'professional'
     },
     {
       id: 'pro-creative-plus',
       name: 'Creative Masterpiece',
-      description: 'Advanced design for creative professionals',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3CdEfs%3E%3CradialGradient id="radial" cx="50%25" cy="50%25" r="50%25"%3E%3Cstop offset="0%25" style="stop-color:%23a855f7;stop-opacity:1" /%3E%3Cstop offset="100%25" style="stop-color:%237c3aed;stop-opacity:1" /%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width="300" height="400" fill="url(%23radial)"/%3E%3Ctext x="20" y="200" font-size="28" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Expressive magazine-style layout',
+      imageUrl: this.buildPreview({
+        accent: '#9333ea',
+        sidebar: false,
+        headerFill: '#f3e8ff',
+        bodyFill: '#faf5ff',
+        headingFill: '#7e22ce',
+        premium: true
+      }),
       isPro: true,
       category: 'creative'
     },
     {
       id: 'pro-corporate',
       name: 'Corporate Elite',
-      description: 'Premium corporate template',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23f8fafc"/%3E%3Crect y="0" width="300" height="80" fill="%230f172a"/%3E%3Ctext x="20" y="50" font-size="24" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Premium corporate template with firm structure',
+      imageUrl: this.buildPreview({
+        accent: '#1e293b',
+        sidebar: false,
+        headerFill: '#e2e8f0',
+        bodyFill: '#ffffff',
+        headingFill: '#0f172a',
+        premium: true
+      }),
       isPro: true,
       category: 'professional'
     },
     {
       id: 'pro-artistic',
       name: 'Artistic Elegance',
-      description: 'Artistic design for creative roles',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23fef2f2"/%3E%3Ccircle cx="150" cy="100" r="40" fill="%23f472b6"/%3E%3Ctext x="20" y="200" font-size="20" font-weight="bold" fill="%23831843"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Bold visual rhythm for design-focused resumes',
+      imageUrl: this.buildPreview({
+        accent: '#db2777',
+        sidebar: true,
+        sidebarFill: '#fdf2f8',
+        headerFill: '#ffffff',
+        bodyFill: '#fff1f2',
+        headingFill: '#be185d',
+        premium: true
+      }),
       isPro: true,
       category: 'creative'
     },
     {
       id: 'pro-minimalist-premium',
       name: 'Minimalist Supreme',
-      description: 'Premium minimalist with advanced features',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23fff"/%3E%3Crect x="20" y="20" width="260" height="360" fill="%23f5f5f5" stroke="%23d0d0d0" stroke-width="1"/%3E%3Ctext x="40" y="50" font-size="16" font-weight="bold" fill="%23000"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Premium minimalist layout with crisp spacing',
+      imageUrl: this.buildPreview({
+        accent: '#475569',
+        sidebar: false,
+        headerFill: '#f8fafc',
+        bodyFill: '#ffffff',
+        headingFill: '#0f172a',
+        premium: true
+      }),
       isPro: true,
       category: 'minimal'
     },
     {
       id: 'pro-interactive',
       name: 'Interactive Modern',
-      description: 'Modern template with interactive elements',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%23e0e7ff"/%3E%3Crect y="0" width="300" height="100" fill="%234f46e5"/%3E%3Ctext x="20" y="55" font-size="24" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3Ccircle cx="270" cy="30" r="15" fill="%23f59e0b"/%3E%3C/svg%3E',
+      description: 'Modern layout with dynamic visual blocks',
+      imageUrl: this.buildPreview({
+        accent: '#2563eb',
+        sidebar: false,
+        headerFill: '#dbeafe',
+        bodyFill: '#eff6ff',
+        headingFill: '#1d4ed8',
+        premium: true
+      }),
       isPro: true,
       category: 'modern'
     },
     {
       id: 'pro-premium-dark',
       name: 'Premium Dark Theme',
-      description: 'Sophisticated dark theme for professionals',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3Crect width="300" height="400" fill="%231f2937"/%3E%3Crect x="20" y="20" width="260" height="360" fill="%232d3748" stroke="%234a5568" stroke-width="2"/%3E%3Ctext x="40" y="60" font-size="20" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      description: 'Elegant high-contrast design for standout resumes',
+      imageUrl: this.buildPreview({
+        accent: '#f59e0b',
+        sidebar: true,
+        sidebarFill: '#111827',
+        headerFill: '#1f2937',
+        bodyFill: '#374151',
+        headingFill: '#f59e0b',
+        premium: true,
+        darkText: true
+      }),
       isPro: true,
       category: 'professional'
     },
     {
       id: 'pro-vibrant-rainbow',
-      name: 'Vibrant Rainbow',
-      description: 'Colorful and vibrant premium design',
-      imageUrl: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400"%3E%3CdEfs%3E%3ClinearGradient id="rainbow" x1="0%25" y1="0%25" x2="100%25" y2="100%25"%3E%3Cstop offset="0%25" style="stop-color:%23ff6b6b;stop-opacity:1" /%3E%3Cstop offset="20%25" style="stop-color:%23ffa94d;stop-opacity:1" /%3E%3Cstop offset="40%25" style="stop-color:%23ffd43b;stop-opacity:1" /%3E%3Cstop offset="60%25" style="stop-color:%2351cf66;stop-opacity:1" /%3E%3Cstop offset="80%25" style="stop-color:%234dabf7;stop-opacity:1" /%3E%3Cstop offset="100%25" style="stop-color:%23b197fc;stop-opacity:1" /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width="300" height="400" fill="url(%23rainbow)"/%3E%3Ctext x="20" y="200" font-size="28" font-weight="bold" fill="%23fff"%3EJohn Doe%3C/text%3E%3C/svg%3E',
+      name: 'Vibrant Spectrum',
+      description: 'Confident color story with strong hierarchy',
+      imageUrl: this.buildPreview({
+        accent: '#ea580c',
+        sidebar: false,
+        headerFill: '#ffedd5',
+        bodyFill: '#fff7ed',
+        headingFill: '#c2410c',
+        premium: true
+      }),
       isPro: true,
       category: 'creative'
     }
   ];
 
-  constructor() {}
-
-  /**
-   * Get all templates
-   */
   getTemplates(): Observable<Template[]> {
     return of(this.templates);
   }
 
-  /**
-   * Get templates by category
-   */
   getTemplatesByCategory(category: string): Observable<Template[]> {
-    const filtered = category === 'all' 
-      ? this.templates 
-      : this.templates.filter(t => t.category === category);
+    const filtered = category === 'all'
+      ? this.templates
+      : this.templates.filter((template) => template.category === category);
     return of(filtered);
   }
 
-  /**
-   * Get free templates only
-   */
   getFreeTemplates(): Observable<Template[]> {
-    return of(this.templates.filter(t => !t.isPro));
+    return of(this.templates.filter((template) => !template.isPro));
   }
 
-  /**
-   * Get all templates (free + pro)
-   */
   getAllTemplates(): Observable<Template[]> {
     return of(this.templates);
   }
 
-  /**
-   * Get template by ID
-   */
   getTemplateById(id: string): Observable<Template | undefined> {
-    return of(this.templates.find(t => t.id === id));
+    return of(this.templates.find((template) => template.id === id));
+  }
+
+  private buildPreview(options: {
+    accent: string;
+    headerFill: string;
+    bodyFill: string;
+    headingFill: string;
+    sidebar: boolean;
+    sidebarFill?: string;
+    divider?: string;
+    premium?: boolean;
+    darkText?: boolean;
+  }): string {
+    const divider = options.divider ?? '#e2e8f0';
+    const sidebar = options.sidebar
+      ? `<rect x="0" y="0" width="82" height="400" fill="${options.sidebarFill ?? options.accent}" />
+         <rect x="18" y="112" width="46" height="8" rx="4" fill="${options.premium ? '#f8fafc' : '#ffffff'}" opacity="0.88" />
+         <rect x="18" y="130" width="34" height="8" rx="4" fill="${options.premium ? '#f8fafc' : '#ffffff'}" opacity="0.7" />
+         <rect x="18" y="164" width="46" height="8" rx="4" fill="${options.premium ? '#f8fafc' : '#ffffff'}" opacity="0.88" />
+         <rect x="18" y="182" width="28" height="8" rx="4" fill="${options.premium ? '#f8fafc' : '#ffffff'}" opacity="0.7" />`
+      : '';
+    const bodyStart = options.sidebar ? 82 : 0;
+    const textColor = options.darkText ? '#f8fafc' : '#0f172a';
+    const mutedText = options.darkText ? '#e5e7eb' : '#64748b';
+
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+        <rect width="300" height="400" rx="18" fill="#ffffff"/>
+        <rect x="10" y="10" width="280" height="380" rx="14" fill="${options.bodyFill}" stroke="#cbd5e1"/>
+        ${sidebar}
+        <rect x="${bodyStart + 18}" y="20" width="${250 - bodyStart}" height="78" rx="14" fill="${options.headerFill}" />
+        <rect x="${bodyStart + 18}" y="36" width="132" height="16" rx="8" fill="${options.accent}" opacity="0.95"/>
+        <rect x="${bodyStart + 18}" y="60" width="104" height="8" rx="4" fill="${mutedText}" opacity="0.8"/>
+        <rect x="${bodyStart + 132}" y="60" width="72" height="8" rx="4" fill="${mutedText}" opacity="0.45"/>
+        <rect x="${bodyStart + 18}" y="120" width="84" height="10" rx="5" fill="${options.headingFill}"/>
+        <line x1="${bodyStart + 18}" y1="138" x2="272" y2="138" stroke="${divider}" />
+        <rect x="${bodyStart + 18}" y="152" width="170" height="8" rx="4" fill="${mutedText}" opacity="0.7"/>
+        <rect x="${bodyStart + 18}" y="166" width="152" height="8" rx="4" fill="${mutedText}" opacity="0.5"/>
+        <rect x="${bodyStart + 18}" y="198" width="96" height="10" rx="5" fill="${options.headingFill}"/>
+        <line x1="${bodyStart + 18}" y1="216" x2="272" y2="216" stroke="${divider}" />
+        <rect x="${bodyStart + 18}" y="232" width="126" height="10" rx="5" fill="${textColor}" opacity="0.9"/>
+        <rect x="222" y="234" width="50" height="8" rx="4" fill="${mutedText}" opacity="0.55"/>
+        <rect x="${bodyStart + 18}" y="250" width="100" height="8" rx="4" fill="${mutedText}" opacity="0.75"/>
+        <circle cx="${bodyStart + 24}" cy="288" r="4" fill="${options.accent}"/>
+        <rect x="${bodyStart + 36}" y="284" width="188" height="8" rx="4" fill="${mutedText}" opacity="0.68"/>
+        <circle cx="${bodyStart + 24}" cy="306" r="4" fill="${options.accent}"/>
+        <rect x="${bodyStart + 36}" y="302" width="176" height="8" rx="4" fill="${mutedText}" opacity="0.52"/>
+        <rect x="${bodyStart + 18}" y="336" width="72" height="10" rx="5" fill="${options.headingFill}"/>
+        <line x1="${bodyStart + 18}" y1="354" x2="272" y2="354" stroke="${divider}" />
+        <rect x="${bodyStart + 18}" y="366" width="62" height="14" rx="7" fill="${options.accent}" opacity="0.16"/>
+        <rect x="${bodyStart + 88}" y="366" width="56" height="14" rx="7" fill="${options.accent}" opacity="0.12"/>
+        <rect x="${bodyStart + 152}" y="366" width="64" height="14" rx="7" fill="${options.accent}" opacity="0.22"/>
+      </svg>
+    `;
+
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
 }

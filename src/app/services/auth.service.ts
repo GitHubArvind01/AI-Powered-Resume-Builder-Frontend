@@ -115,4 +115,12 @@ export class AuthService {
       })
     );
   }
+
+  refreshToken(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}).pipe(
+      tap((res) => {
+        this.authState.setSession(res);
+      })
+    );
+  }
 }
