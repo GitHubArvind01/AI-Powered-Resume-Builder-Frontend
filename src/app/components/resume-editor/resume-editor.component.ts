@@ -323,11 +323,12 @@ export class ResumeEditorComponent implements OnInit {
     this.isCheckingAts = true;
     this.resumeService.performAtsCheck(this.resume.id).subscribe(
       result => {
-        alert(`ATS Score: ${result.score}/100\nIssues: ${result.issues.length}`);
+        alert(`ATS Score: ${result.score}/100\nSuggestions: ${result.suggestions.length}`);
         this.isCheckingAts = false;
       },
       error => {
         console.error('ATS check error:', error);
+        alert(error?.message || 'ATS analysis failed. Please try again.');
         this.isCheckingAts = false;
       }
     );
