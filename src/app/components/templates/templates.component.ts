@@ -42,6 +42,7 @@ export class TemplatesComponent implements OnInit {
   currentUserPlan: UserPlan = UserPlan.FREE;
   showUpgradeModal: boolean = false;
   selectedTemplate: Template | null = null;
+  selectingTemplateId: string | null = null;
 
   categories = [
     { id: 'all', label: 'All Templates' },
@@ -95,12 +96,17 @@ export class TemplatesComponent implements OnInit {
   }
 
   selectTemplate(template: Template): void {
+    if (this.selectingTemplateId) {
+      return;
+    }
+
     this.selectedTemplate = template;
     if (template.isPro && this.currentUserPlan === UserPlan.FREE) {
       this.showUpgradeModal = true;
       return;
     }
 
+    this.selectingTemplateId = template.id;
     this.router.navigate(['/resume/create'], {
       queryParams: { templateId: template.id }
     });
@@ -109,6 +115,7 @@ export class TemplatesComponent implements OnInit {
   closeUpgradeModal(): void {
     this.showUpgradeModal = false;
     this.selectedTemplate = null;
+    this.selectingTemplateId = null;
   }
 
   goToUpgrade(): void {
@@ -126,5 +133,9 @@ export class TemplatesComponent implements OnInit {
 
   isLocked(template: Template): boolean {
     return template.isPro && this.currentUserPlan === UserPlan.FREE;
+  }
+
+  isSelecting(template: Template): boolean {
+    return this.selectingTemplateId === template.id;
   }
 }

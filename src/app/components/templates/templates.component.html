@@ -1,13 +1,13 @@
 <div class="templates-container">
   <div *ngIf="showTitle" class="templates-header">
     <h2>Professional Resume Templates</h2>
-    <p>Choose from 10+ premium templates designed by professionals</p>
+    <p>Choose from polished layouts that clearly preview structure, color, and typography.</p>
   </div>
 
-  <!-- Category Filter -->
   <div class="category-filter">
-    <button 
+    <button
       *ngFor="let category of categories"
+      type="button"
       [class.active]="selectedCategory === category.id"
       (click)="onCategoryChange(category.id)"
       class="category-btn">
@@ -15,25 +15,21 @@
     </button>
   </div>
 
-  <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-state">
     <div class="spinner"></div>
     <p>Loading templates...</p>
   </div>
 
-  <!-- Templates Grid -->
   <div *ngIf="!isLoading" class="templates-grid">
-    <div 
-      *ngFor="let template of filteredTemplates" 
+    <div
+      *ngFor="let template of filteredTemplates"
       @fadeIn
       class="template-card"
+      [class.locked]="isLocked(template)"
       (click)="selectTemplate(template)">
-      
-      <!-- Template Image -->
       <div class="template-image">
         <img [src]="template.imageUrl" [alt]="template.name" />
-        
-        <!-- Pro Badge or Lock Icon -->
+
         <div *ngIf="isLocked(template)" class="pro-overlay">
           <div class="lock-icon">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -45,33 +41,29 @@
         </div>
       </div>
 
-      <!-- Template Info -->
       <div class="template-info">
-        <h3>{{ template.name }}</h3>
-        <p class="description">{{ template.description }}</p>
-        
-        <!-- Badge -->
-        <div class="template-footer">
+        <div class="template-title-row">
+          <h3>{{ template.name }}</h3>
           <span [class]="getPlanColor(template)" class="plan-badge">
             {{ getTemplateLabel(template) }}
           </span>
         </div>
+        <p class="description">{{ template.description }}</p>
       </div>
 
-      <!-- Hover Action -->
       <div class="template-action">
-        <button class="use-template-btn">
-          {{ isLocked(template) ? 'Upgrade' : 'Use Template' }}
+        <button class="use-template-btn" type="button" [disabled]="isSelecting(template)">
+          <span *ngIf="!isSelecting(template)">{{ isLocked(template) ? 'Upgrade' : 'Use Template' }}</span>
+          <span *ngIf="isSelecting(template)" class="button-spinner"></span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Upgrade Modal -->
   <div *ngIf="showUpgradeModal" class="modal-overlay" (click)="closeUpgradeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
-      <button class="close-btn" (click)="closeUpgradeModal()">×</button>
-      
+      <button class="close-btn" type="button" (click)="closeUpgradeModal()">x</button>
+
       <div class="modal-header">
         <svg class="lock-icon-large" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
@@ -79,27 +71,27 @@
       </div>
 
       <h2>Unlock Premium Template</h2>
-      <p>Access "{{ selectedTemplate?.name }}" and 30+ more premium templates with a PRO subscription</p>
+      <p>Access "{{ selectedTemplate?.name }}" and the rest of the premium library with a PRO subscription.</p>
 
       <div class="modal-benefits">
         <div class="benefit">
-          <span class="checkmark">✓</span>
-          <span>All Premium Templates</span>
+          <span class="checkmark">+</span>
+          <span>All premium templates</span>
         </div>
         <div class="benefit">
-          <span class="checkmark">✓</span>
-          <span>ATS Optimization</span>
+          <span class="checkmark">+</span>
+          <span>ATS optimization</span>
         </div>
         <div class="benefit">
-          <span class="checkmark">✓</span>
-          <span>Priority Support</span>
+          <span class="checkmark">+</span>
+          <span>Priority support</span>
         </div>
       </div>
 
-      <button class="modal-action-btn" (click)="goToUpgrade()">
+      <button class="modal-action-btn" type="button" (click)="goToUpgrade()">
         Upgrade Now
       </button>
-      <button class="modal-cancel-btn" (click)="closeUpgradeModal()">
+      <button class="modal-cancel-btn" type="button" (click)="closeUpgradeModal()">
         Maybe Later
       </button>
     </div>
