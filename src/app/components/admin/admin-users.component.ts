@@ -1,12 +1,15 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { AdminService } from '../../services/admin.service';
 import {
   AdminUpdateUserRequest,
   AdminUserDetails,
   AdminUserSummary
 } from '../../models/template.model';
+
+type UserAction = 'save' | 'deactivate' | 'activate' | 'delete';
 
 @Component({
   selector: 'app-admin-users',
@@ -22,10 +25,13 @@ export class AdminUsersComponent implements OnInit {
   selectedUser: AdminUserDetails | null = null;
   form: AdminUpdateUserRequest = this.createEmptyForm();
   isLoading = true;
-  isSaving = false;
+  isDetailLoading = false;
   errorMessage = '';
   successMessage = '';
   searchTerm = '';
+  isModalOpen = false;
+  currentAction: UserAction | null = null;
+  actionUserId: number | null = null;
 
   ngOnInit(): void {
     this.loadUsers();
@@ -45,6 +51,10 @@ export class AdminUsersComponent implements OnInit {
     );
   }
 
+  get isSaving(): boolean {
+    return this.currentAction === 'save';
+  }
+
   loadUsers(selectUserId?: number): void {
     this.isLoading = true;
     this.adminService.getUsers().subscribe({
@@ -52,8 +62,8 @@ export class AdminUsersComponent implements OnInit {
         this.users = users;
         this.isLoading = false;
 
-        if (selectUserId) {
-          this.viewUser(selectUserId);
+        if (selectUserId && this.selectedUser?.id === selectUserId) {
+          this.refreshSelectedUser(selectUserId);
         }
       },
       error: (error) => {
@@ -63,9 +73,11 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  viewUser(userId: number): void {
+  openUserModal(userId: number): void {
     this.errorMessage = '';
     this.successMessage = '';
+    this.isModalOpen = true;
+    this.isDetailLoading = true;
 
     this.adminService.getUserById(userId).subscribe({
       next: (user) => {
@@ -78,77 +90,131 @@ export class AdminUsersComponent implements OnInit {
           subscriptionPlan: user.subscriptionPlan,
           active: user.active
         };
+        this.isDetailLoading = false;
       },
       error: (error) => {
         this.errorMessage = error?.error?.message || error?.message || 'Failed to load user details.';
+        this.isDetailLoading = false;
       }
     });
+  }
+
+  closeModal(): void {
+    if (this.currentAction) {
+      return;
+    }
+
+    this.isModalOpen = false;
+    this.selectedUser = null;
+    this.form = this.createEmptyForm();
+    this.isDetailLoading = false;
   }
 
   saveUser(): void {
-    if (!this.selectedUser) {
+    if (!this.selectedUser || this.currentAction) {
       return;
     }
 
-    this.isSaving = true;
-    this.adminService.updateUser(this.selectedUser.id, this.form).subscribe({
-      next: (user) => {
+    this.runUserAction<AdminUserDetails>('save', this.selectedUser.id, () =>
+      this.adminService.updateUser(this.selectedUser!.id, this.form),
+      (user) => {
         this.successMessage = 'User updated successfully.';
         this.selectedUser = user;
-        this.isSaving = false;
         this.loadUsers(user.id);
       },
-      error: (error) => {
-        this.errorMessage = error?.error?.message || error?.message || 'Failed to update user.';
-        this.isSaving = false;
-      }
-    });
+      'Failed to update user.'
+    );
   }
 
   deactivateUser(userId: number): void {
-    this.adminService.deactivateUser(userId).subscribe({
-      next: (user) => {
-        this.successMessage = 'User deactivated and notified by email.';
-        this.selectedUser = user;
-        this.form.active = false;
-        this.loadUsers(user.id);
-      },
-      error: (error) => {
-        this.errorMessage = error?.error?.message || error?.message || 'Failed to deactivate user.';
-      }
-    });
-  }
-
-  activateUser(userId: number): void {
-    this.adminService.activateUser(userId).subscribe({
-      next: (user) => {
-        this.successMessage = 'User activated successfully.';
-        this.selectedUser = user;
-        this.form.active = true;
-        this.loadUsers(user.id);
-      },
-      error: (error) => {
-        this.errorMessage = error?.error?.message || error?.message || 'Failed to activate user.';
-      }
-    });
-  }
-
-  deleteUser(userId: number): void {
-    if (!confirm('Delete this user permanently? This action cannot be undone.')) {
+    if (this.currentAction) {
       return;
     }
 
-    this.adminService.deleteUser(userId).subscribe({
-      next: () => {
-        this.successMessage = 'User deleted and notification email sent.';
-        this.selectedUser = null;
-        this.form = this.createEmptyForm();
-        this.loadUsers();
-      },
-      error: (error) => {
-        this.errorMessage = error?.error?.message || error?.message || 'Failed to delete user.';
+    this.runUserAction<AdminUserDetails>('deactivate', userId, () => this.adminService.deactivateUser(userId), (user) => {
+      this.successMessage = 'User deactivated and notified by email.';
+      this.selectedUser = user;
+      this.form.active = false;
+      this.loadUsers(user.id);
+    }, 'Failed to deactivate user.');
+  }
+
+  activateUser(userId: number): void {
+    if (this.currentAction) {
+      return;
+    }
+
+    this.runUserAction<AdminUserDetails>('activate', userId, () => this.adminService.activateUser(userId), (user) => {
+      this.successMessage = 'User activated successfully.';
+      this.selectedUser = user;
+      this.form.active = true;
+      this.loadUsers(user.id);
+    }, 'Failed to activate user.');
+  }
+
+  deleteUser(userId: number): void {
+    if (this.currentAction || !confirm('Delete this user permanently? This action cannot be undone.')) {
+      return;
+    }
+
+    this.runUserAction<void>('delete', userId, () => this.adminService.deleteUser(userId), () => {
+      this.successMessage = 'User deleted and notification email sent.';
+      this.closeModalAfterDelete();
+      this.loadUsers();
+    }, 'Failed to delete user.');
+  }
+
+  isActionLoading(action: UserAction, userId?: number): boolean {
+    return this.currentAction === action && (userId == null || this.actionUserId === userId);
+  }
+
+  private refreshSelectedUser(userId: number): void {
+    this.adminService.getUserById(userId).subscribe({
+      next: (user) => {
+        this.selectedUser = user;
+        this.form = {
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone || '',
+          role: user.role,
+          subscriptionPlan: user.subscriptionPlan,
+          active: user.active
+        };
       }
     });
+  }
+
+  private runUserAction<T>(
+    action: UserAction,
+    userId: number,
+    request: () => Observable<T>,
+    onSuccess: (response: T) => void,
+    fallbackMessage: string
+  ): void {
+    this.errorMessage = '';
+    this.currentAction = action;
+    this.actionUserId = userId;
+
+    request().subscribe({
+      next: (response: T) => {
+        onSuccess(response);
+        this.currentAction = null;
+        this.actionUserId = null;
+      },
+      error: (error: any) => {
+        this.errorMessage = error?.error?.message || error?.message || fallbackMessage;
+        this.currentAction = null;
+        this.actionUserId = null;
+      }
+    });
+  }
+
+  private closeModalAfterDelete(): void {
+    this.isModalOpen = false;
+    this.selectedUser = null;
+    this.form = this.createEmptyForm();
+    this.currentAction = null;
+    this.actionUserId = null;
   }
 
   private createEmptyForm(): AdminUpdateUserRequest {
