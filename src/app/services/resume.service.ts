@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, throwError } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Template, Resume } from '../models/template.model';
@@ -17,6 +17,18 @@ interface BackendResumeResponse {
   updatedAt: string;
   status: string;
   description?: string | null;
+}
+
+interface AtsBackendResponse {
+  atsScore: number;
+  improvements?: string[];
+  missingKeywords?: string[];
+  overallFeedback?: string;
+}
+
+export interface AtsCheckResult {
+  score: number;
+  suggestions: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -107,6 +119,11 @@ export class ResumeService {
   }
 
   performAtsCheck(resumeId: string, jobDescription: string = ''): Observable<any> {
+    const parsedResumeId = Number(resumeId);
+    if (!Number.isFinite(parsedResumeId)) {
+      return throwError(() => new Error('Please save the resume before running an ATS check.'));
+    }
+
     return this.getResumeById(resumeId).pipe(
       switchMap((resume) => {
         const userId = this.authState.getCurrentUserId();
@@ -114,14 +131,40 @@ export class ResumeService {
           return throwError(() => new Error('User session is not ready.'));
         }
 
-        return this.http.post(`${this.aiUrl}/check-ats`, {
+        return this.http.post<AtsBackendResponse>(`${this.aiUrl}/check-ats`, {
           userId,
-          resumeId: Number(resumeId),
+          resumeId: parsedResumeId,
           resumeContent: JSON.stringify(resume.content),
           jobDescription
-        });
+        }).pipe(
+          map((response) => ({
+            score: response.atsScore ?? 0,
+            suggestions: this.buildAtsSuggestions(response)
+          })),
+          catchError((error) => {
+            const message = error?.error?.message || error?.message || 'ATS analysis failed. Please try again.';
+            return throwError(() => new Error(message));
+          })
+        );
+      }),
+      catchError((error) => {
+        const message = error?.error?.message || error?.message || 'Unable to load resume for ATS analysis.';
+        return throwError(() => new Error(message));
       })
     );
+  }
+
+  private buildAtsSuggestions(response: AtsBackendResponse): string[] {
+    const suggestions = [
+      ...(response.improvements ?? []),
+      ...((response.missingKeywords ?? []).slice(0, 5).map((keyword) => `Add keyword: ${keyword}`))
+    ].filter((value, index, array) => !!value && array.indexOf(value) === index);
+
+    if (!suggestions.length && response.overallFeedback) {
+      suggestions.push(response.overallFeedback);
+    }
+
+    return suggestions.length ? suggestions : ['Resume looks ATS-ready.'];
   }
 
   private mapResume(resume: BackendResumeResponse): Resume {
