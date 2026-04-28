@@ -60,40 +60,12 @@ export class AuthService {
     this.router.navigate(['/auth']);
   }
 
-  isLoggedIn(): boolean {
-    return this.authState.isLoggedIn();
-  }
-
-  getToken(): string | null {
-    return this.authState.getToken();
-  }
-
-  decodeToken() {
-    return this.authState.decodeToken();
-  }
-
-  getRole(): string | null {
-    return this.authState.getCurrentRole();
-  }
-
-  getSubscriptionPlan(): string {
-    return this.authState.getSubscriptionPlan();
-  }
-
-  getUserId(): number | null {
-    return this.authState.getCurrentUserId();
-  }
-
   getEmail(): string | null {
     return this.authState.decodeToken()?.sub ?? null;
   }
 
   isAdmin(): boolean {
     return this.authState.isAdmin();
-  }
-
-  isTokenValid(): boolean {
-    return this.authState.isTokenValid();
   }
 
   initiateGoogleLogin() {
@@ -109,15 +81,6 @@ export class AuthService {
 
   handleGoogleCallback(code: string): Observable<AuthResponse> {
     return this.http.get<AuthResponse>(`${this.googleAuthUrl}/callback?code=${code}`).pipe(
-      tap((res) => {
-        this.authState.setSession(res);
-        this.authState.refreshCurrentUser().subscribe();
-      })
-    );
-  }
-
-  refreshToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}).pipe(
       tap((res) => {
         this.authState.setSession(res);
         this.authState.refreshCurrentUser().subscribe();

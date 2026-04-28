@@ -33,13 +33,16 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       new URLSearchParams(window.location.search).get('paymentId');
 
     if (!paymentId) {
-      this.statusMessage = 'Payment confirmed! Redirecting...';
-      this.scheduleRedirect('/dashboard', 2000);
+      this.statusMessage = 'Payment confirmed!';
+      this.forceRelogin();
       return;
     }
 
     this.paymentService.verifyPayment(paymentId).subscribe({
-      next: () => this.refreshSessionAfterPayment(),
+      next: () => {
+        this.statusMessage = 'Payment successful!';
+        this.forceRelogin(); // now delay is handled inside
+      },
       error: () => {
         this.verificationFailed = true;
         this.statusMessage = 'Payment verification failed. Please contact support.';
@@ -53,27 +56,20 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       clearTimeout(this.redirectTimeout);
     }
   }
+  private forceRelogin(): void {
+    // Step 1: show success message FIRST
+    this.statusMessage = 'Payment successful! Redirecting to login...';
 
-  private refreshSessionAfterPayment(): void {
-    this.statusMessage = 'Refreshing your access...';
+    // Step 2: wait 2 seconds BEFORE clearing session
+    this.redirectTimeout = setTimeout(() => {
+      // Clear everything AFTER delay
+      this.authService.logout();
+      sessionStorage.clear();
 
-    this.authService.refreshToken().subscribe({
-      next: () => {
-        this.statusMessage = 'Updating your subscription...';
-        this.userService.getUserProfile().subscribe({
-          next: () => this.finishSuccessFlow(),
-          error: () => this.finishSuccessFlow()
-        });
-      },
-      error: () => this.finishSuccessFlow()
-    });
+      this.showAnimation = false;
+      this.router.navigate(['/login']);
+    }, 2000);
   }
-
-  private finishSuccessFlow(): void {
-    this.statusMessage = 'All done! Taking you to your dashboard...';
-    this.scheduleRedirect('/dashboard', 2000);
-  }
-
   private scheduleRedirect(path: string, delayMs: number): void {
     this.redirectTimeout = setTimeout(() => {
       this.showAnimation = false;
