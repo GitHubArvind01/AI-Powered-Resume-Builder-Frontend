@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { merge, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UserPlan, UserProfile } from '../models/template.model';
 import { AuthStateService } from './auth-state.service';
@@ -9,7 +9,7 @@ export class UserService {
   private authState = inject(AuthStateService);
 
   public userProfile$ = this.authState.user$;
-  public userPlan$ = this.authState.user$.pipe(
+  public userPlan$ = merge(this.authState.user$, this.authState.token$).pipe(
     map(() => this.authState.getCurrentPlan())
   );
 
