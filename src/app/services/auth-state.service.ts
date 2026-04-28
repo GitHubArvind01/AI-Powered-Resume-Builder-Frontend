@@ -46,6 +46,7 @@ export class AuthStateService {
   }
 
   setSession(response: AuthResponse): void {
+    localStorage.removeItem(this.tokenKey);
     localStorage.setItem(this.tokenKey, response.token);
     this.tokenSubject.next(response.token);
   }
