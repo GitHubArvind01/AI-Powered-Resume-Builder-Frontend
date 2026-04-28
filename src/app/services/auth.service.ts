@@ -120,6 +120,7 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/refresh-token`, {}).pipe(
       tap((res) => {
         this.authState.setSession(res);
+        this.authState.refreshCurrentUser().subscribe();
       })
     );
   }
