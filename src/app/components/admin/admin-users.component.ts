@@ -121,6 +121,7 @@ export class AdminUsersComponent implements OnInit {
         this.successMessage = 'User updated successfully.';
         this.selectedUser = user;
         this.loadUsers(user.id);
+        this.closeModal();
       },
       'Failed to update user.'
     );
@@ -136,6 +137,7 @@ export class AdminUsersComponent implements OnInit {
       this.selectedUser = user;
       this.form.active = false;
       this.loadUsers(user.id);
+      this.closeModal();
     }, 'Failed to deactivate user.');
   }
 
@@ -149,6 +151,7 @@ export class AdminUsersComponent implements OnInit {
       this.selectedUser = user;
       this.form.active = true;
       this.loadUsers(user.id);
+      this.closeModal();
     }, 'Failed to activate user.');
   }
 
@@ -197,9 +200,9 @@ export class AdminUsersComponent implements OnInit {
 
     request().subscribe({
       next: (response: T) => {
-        onSuccess(response);
         this.currentAction = null;
         this.actionUserId = null;
+        onSuccess(response);
       },
       error: (error: any) => {
         this.errorMessage = error?.error?.message || error?.message || fallbackMessage;
