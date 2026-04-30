@@ -1,7 +1,8 @@
 .admin-shell {
-  min-height: 100vh;
+  height: 100vh;              /* FIX: lock to viewport */
   display: grid;
   grid-template-columns: 280px 1fr;
+  overflow: hidden;           /* IMPORTANT: stop full page scroll */
   background:
     radial-gradient(circle at top left, rgba(12, 74, 110, 0.18), transparent 28%),
     linear-gradient(135deg, #f6efe7 0%, #fffdf9 45%, #eef5f7 100%);
@@ -9,6 +10,9 @@
 }
 
 .admin-sidebar {
+  height: 100vh;              /* full height */
+  position: sticky;           /* stays in place */
+  top: 0;                     /* stick to top */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -86,6 +90,8 @@
 }
 
 .admin-content {
+  height: 100vh;          /* match viewport */
+  overflow-y: auto;       /* ONLY this scrolls */
   padding: 32px;
 }
 
