@@ -108,7 +108,8 @@ export class TemplatesComponent implements OnInit {
 
     this.selectingTemplateId = template.id;
     this.router.navigate(['/resume/create'], {
-      queryParams: { templateId: template.id }
+      queryParams: { templateId: template.id },
+      state: { previewData: template.previewData ?? null }
     });
   }
 

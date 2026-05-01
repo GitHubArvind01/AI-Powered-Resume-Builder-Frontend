@@ -6,6 +6,7 @@ export interface Template {
   isPro: boolean;
   isFavorite?: boolean;
   category: 'professional' | 'modern' | 'creative' | 'minimal' | 'executive';
+  previewData?: any; // Realistic placeholder resume content for editor pre-population
 }
 
 export interface Resume {
