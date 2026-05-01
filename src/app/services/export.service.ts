@@ -24,11 +24,6 @@ export class ExportService {
       responseType: 'blob'
     });
   }
-
-  exportAsDocx(resumeId: string): Observable<Blob> {
-    return throwError(() => new Error(`DOCX export is not available yet for resume ${resumeId}.`));
-  }
-
   downloadFile(blob: Blob, fileName: string): void {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
