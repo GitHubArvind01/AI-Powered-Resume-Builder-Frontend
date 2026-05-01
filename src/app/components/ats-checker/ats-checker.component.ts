@@ -1,22 +1,16 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ResumeService } from '../../services/resume.service';
 import { UserService } from '../../services/user.service';
 import { UserPlan } from '../../models/template.model';
 import { trigger, transition, style, animate } from '@angular/animations';
 
-export interface AtsCheckResult {
+export interface AtsDisplayResult {
   score: number;
-  issues: AtsIssue[];
   suggestions: string[];
-  creditsUsed: number;
-  creditsRemaining: number;
-}
-
-export interface AtsIssue {
-  severity: 'critical' | 'warning' | 'info';
-  message: string;
-  line?: number;
+  overallFeedback?: string;
+  matchedKeywords?: string[];
+  missingKeywords?: string[];
 }
 
 @Component({
@@ -43,7 +37,7 @@ export interface AtsIssue {
     ])
   ]
 })
-export class AtsCheckerComponent implements OnInit {
+export class AtsCheckerComponent implements OnInit, OnChanges {
   @Input() isOpen: boolean = false;
   @Input() resumeId: string = '';
   @Output() close = new EventEmitter<void>();
@@ -51,13 +45,10 @@ export class AtsCheckerComponent implements OnInit {
   private resumeService = inject(ResumeService);
   private userService = inject(UserService);
 
-  result: AtsCheckResult | null = null;
+  result: AtsDisplayResult | null = null;
   isLoading = false;
   error: string | null = null;
   userPlan: UserPlan = UserPlan.FREE;
-  criticalIssuesCount = 0;
-  warningIssuesCount = 0;
-  infoIssuesCount = 0;
 
   ngOnInit(): void {
     this.userService.userPlan$.subscribe(plan => {
@@ -65,8 +56,11 @@ export class AtsCheckerComponent implements OnInit {
     });
   }
 
-  ngOnChanges(changes: any): void {
+  ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen && this.resumeId) {
+      // Reset state and re-fetch whenever the drawer opens
+      this.result = null;
+      this.error = null;
       this.performAtsCheck();
     }
   }
@@ -77,26 +71,17 @@ export class AtsCheckerComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
-    this.resumeService.performAtsCheck(this.resumeId).subscribe(
-      result => {
+    this.resumeService.performAtsCheck(this.resumeId).subscribe({
+      next: (result) => {
         this.result = result;
-        this.calculateIssuesCounts();
         this.isLoading = false;
       },
-      error => {
-        console.error('ATS check error:', error);
-        this.error = error?.error?.message || 'Failed to perform ATS check';
+      error: (err) => {
+        console.error('ATS check error:', err);
+        this.error = err?.error?.message || err?.message || 'Failed to perform ATS check. Please save your resume first.';
         this.isLoading = false;
       }
-    );
-  }
-
-  calculateIssuesCounts(): void {
-    if (!this.result) return;
-
-    this.criticalIssuesCount = this.result.issues.filter(i => i.severity === 'critical').length;
-    this.warningIssuesCount = this.result.issues.filter(i => i.severity === 'warning').length;
-    this.infoIssuesCount = this.result.issues.filter(i => i.severity === 'info').length;
+    });
   }
 
   getScoreColor(): string {
@@ -113,7 +98,13 @@ export class AtsCheckerComponent implements OnInit {
     if (score >= 80) return 'Excellent';
     if (score >= 60) return 'Good';
     if (score >= 40) return 'Fair';
-    return 'Poor';
+    return 'Needs Work';
+  }
+
+  getScoreDashoffset(): number {
+    // For animated SVG circle: circumference = 2πr = 2π×45 ≈ 283
+    if (!this.result) return 283;
+    return 283 - (283 * this.result.score) / 100;
   }
 
   closeModal(): void {
@@ -123,23 +114,26 @@ export class AtsCheckerComponent implements OnInit {
   downloadReport(): void {
     if (!this.result) return;
 
-    const report = `
-ATS Check Report
-================
-Score: ${this.result.score}/100 (${this.getScoreLabel()})
-Credits Used: ${this.result.creditsUsed}
-Credits Remaining: ${this.result.creditsRemaining}
+    const matchedSection = this.result.matchedKeywords?.length
+      ? `\nMatched Keywords:\n${this.result.matchedKeywords.join(', ')}`
+      : '';
+    const missingSection = this.result.missingKeywords?.length
+      ? `\nMissing Keywords:\n${this.result.missingKeywords.join(', ')}`
+      : '';
 
-Critical Issues: ${this.criticalIssuesCount}
-Warnings: ${this.warningIssuesCount}
-Info: ${this.infoIssuesCount}
-
-Issues:
-${this.result.issues.map(issue => `[${issue.severity.toUpperCase()}] ${issue.message}`).join('\n')}
-
-Suggestions:
-${this.result.suggestions.map((s, i) => `${i + 1}. ${s}`).join('\n')}
-    `;
+    const report = [
+      'ATS Check Report',
+      '================',
+      `Score: ${this.result.score}/100 (${this.getScoreLabel()})`,
+      matchedSection,
+      missingSection,
+      '',
+      'Actionable Suggestions:',
+      ...this.result.suggestions.map((s, i) => `${i + 1}. ${s}`),
+      '',
+      'Overall Feedback:',
+      this.result.overallFeedback ?? 'N/A'
+    ].join('\n').trim();
 
     const blob = new Blob([report], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);

@@ -1,99 +1,94 @@
-<!-- ATS Checker Modal -->
+<!-- ATS Checker Side Drawer -->
 <div *ngIf="isOpen" class="ats-overlay" (click)="closeModal()" [@fadeIn]>
   <div class="ats-modal" (click)="$event.stopPropagation()" [@slideIn]>
+
     <!-- Header -->
     <div class="modal-header">
-      <h2>ATS Compatibility Check</h2>
+      <div class="header-title">
+        <span class="header-icon">🎯</span>
+        <h2>ATS Compatibility Check</h2>
+      </div>
       <button class="close-btn" (click)="closeModal()">✕</button>
     </div>
 
     <!-- Content -->
     <div class="modal-content">
+
       <!-- Loading State -->
       <div *ngIf="isLoading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Analyzing your resume...</p>
+        <div class="pulse-ring">
+          <div class="pulse-core"></div>
+        </div>
+        <p>Analyzing your resume with AI...</p>
+        <span class="loading-sub">This may take a few seconds</span>
       </div>
 
       <!-- Error State -->
       <div *ngIf="error && !isLoading" class="error-state">
         <div class="error-icon">⚠️</div>
         <p>{{ error }}</p>
+        <button class="retry-btn" (click)="performAtsCheck()">Retry Analysis</button>
       </div>
 
       <!-- Results State -->
       <div *ngIf="result && !isLoading && !error" class="results-state">
-        <!-- Score Card -->
-        <div class="score-card">
-          <div class="score-circle" [style.borderColor]="getScoreColor()">
-            <div class="score-value">{{ result.score }}</div>
-            <div class="score-label">/100</div>
-          </div>
-          <div class="score-info">
-            <h3>{{ getScoreLabel() }}</h3>
-            <p>Your resume is {{ getScoreLabel().toLowerCase() }} for ATS systems</p>
+
+        <!-- Animated Score Ring -->
+        <div class="score-ring-wrapper">
+          <svg class="score-ring" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="45"/>
+            <circle
+              class="ring-fill"
+              cx="50" cy="50" r="45"
+              [style.stroke]="getScoreColor()"
+              [style.strokeDashoffset]="getScoreDashoffset()"
+            />
+          </svg>
+          <div class="score-center">
+            <span class="score-number" [style.color]="getScoreColor()">{{ result.score }}</span>
+            <span class="score-denom">/100</span>
           </div>
         </div>
 
-        <!-- Credits Info -->
-        <div class="credits-info">
-          <span class="credits-used">
-            Credits Used: <strong>{{ result.creditsUsed }}</strong>
-          </span>
-          <span class="credits-remaining" [class.low]="result.creditsRemaining <= 1">
-            Remaining: <strong>{{ result.creditsRemaining }}</strong>
-          </span>
+        <!-- Score Label -->
+        <div class="score-verdict">
+          <span class="verdict-badge" [style.background]="getScoreColor()">{{ getScoreLabel() }}</span>
+          <p class="verdict-text">Your resume is <strong>{{ getScoreLabel().toLowerCase() }}</strong> for ATS systems</p>
         </div>
 
-        <!-- Issues Summary -->
-        <div class="issues-summary">
-          <div class="issue-count critical" *ngIf="criticalIssuesCount > 0">
-            <span class="icon">🔴</span>
-            <span class="count">{{ criticalIssuesCount }}</span>
-            <span class="label">Critical</span>
-          </div>
-          <div class="issue-count warning" *ngIf="warningIssuesCount > 0">
-            <span class="icon">🟡</span>
-            <span class="count">{{ warningIssuesCount }}</span>
-            <span class="label">Warnings</span>
-          </div>
-          <div class="issue-count info" *ngIf="infoIssuesCount > 0">
-            <span class="icon">ℹ️</span>
-            <span class="count">{{ infoIssuesCount }}</span>
-            <span class="label">Info</span>
-          </div>
+        <!-- Overall Feedback -->
+        <div *ngIf="result.overallFeedback" class="feedback-card">
+          <h4>📋 Overall Assessment</h4>
+          <p>{{ result.overallFeedback }}</p>
         </div>
 
-        <!-- Issues List -->
-        <div class="issues-container" *ngIf="result.issues.length > 0">
-          <h4>Issues Found</h4>
-          <div class="issues-list">
-            <div *ngFor="let issue of result.issues" class="issue-item" [class]="issue.severity">
-              <div class="issue-icon">
-                <span *ngIf="issue.severity === 'critical'">🔴</span>
-                <span *ngIf="issue.severity === 'warning'">🟡</span>
-                <span *ngIf="issue.severity === 'info'">ℹ️</span>
-              </div>
-              <div class="issue-content">
-                <p class="issue-message">{{ issue.message }}</p>
-                <p class="issue-severity" [class]="issue.severity">
-                  {{ issue.severity | uppercase }}
-                </p>
-              </div>
+        <!-- Keyword Analysis -->
+        <div *ngIf="(result.matchedKeywords?.length || 0) + (result.missingKeywords?.length || 0) > 0" class="keywords-section">
+          <div *ngIf="result.matchedKeywords?.length" class="keyword-group matched">
+            <h4>✅ Matched Keywords <span class="kw-count">{{ result.matchedKeywords!.length }}</span></h4>
+            <div class="keyword-chips">
+              <span *ngFor="let kw of result.matchedKeywords" class="chip chip-match">{{ kw }}</span>
+            </div>
+          </div>
+          <div *ngIf="result.missingKeywords?.length" class="keyword-group missing">
+            <h4>❌ Missing Keywords <span class="kw-count">{{ result.missingKeywords!.length }}</span></h4>
+            <div class="keyword-chips">
+              <span *ngFor="let kw of result.missingKeywords" class="chip chip-miss">{{ kw }}</span>
             </div>
           </div>
         </div>
 
         <!-- Suggestions -->
-        <div class="suggestions-container" *ngIf="result.suggestions.length > 0">
-          <h4>Suggestions to Improve</h4>
+        <div *ngIf="result.suggestions.length > 0" class="suggestions-container">
+          <h4>💡 Actionable Improvements</h4>
           <ul class="suggestions-list">
-            <li *ngFor="let suggestion of result.suggestions" class="suggestion-item">
-              <span class="suggestion-icon">💡</span>
+            <li *ngFor="let suggestion of result.suggestions; let i = index" class="suggestion-item">
+              <span class="suggestion-num">{{ i + 1 }}</span>
               <span>{{ suggestion }}</span>
             </li>
           </ul>
         </div>
+
       </div>
     </div>
 
@@ -106,5 +101,6 @@
         {{ isLoading ? 'Analyzing...' : 'Close' }}
       </button>
     </div>
+
   </div>
 </div>
