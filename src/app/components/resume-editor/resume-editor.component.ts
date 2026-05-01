@@ -1,12 +1,15 @@
-import { Component, OnInit, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { ResumeService } from '../../services/resume.service';
 import { AiService } from '../../services/ai.service';
 import { ExportService } from '../../services/export.service';
 import { UserService } from '../../services/user.service';
 import { Resume, UserPlan, Template } from '../../models/template.model';
+import { AtsCheckerComponent } from '../ats-checker/ats-checker.component';
 import { trigger, transition, style, animate } from '@angular/animations';
 
 interface EditorSection {
@@ -19,7 +22,7 @@ interface EditorSection {
 @Component({
   selector: 'app-resume-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AtsCheckerComponent],
   templateUrl: './resume-editor.component.html',
   styleUrls: ['./resume-editor.component.css'],
   animations: [
@@ -37,7 +40,7 @@ interface EditorSection {
     ])
   ]
 })
-export class ResumeEditorComponent implements OnInit {
+export class ResumeEditorComponent implements OnInit, OnDestroy {
   private resumeService = inject(ResumeService);
   private aiService = inject(AiService);
   private exportService = inject(ExportService);
@@ -48,6 +51,11 @@ export class ResumeEditorComponent implements OnInit {
 
   @ViewChild('previewContainer') previewContainer: ElementRef | undefined;
 
+  // ── Lifecycle subjects (Task 3: debounce + cleanup) ──────────────────────
+  private destroy$ = new Subject<void>();
+  private autoSaveSubject = new Subject<void>();
+  private saveInProgress = false;
+
   resume: Resume | null = null;
   resumeForm: FormGroup = this.fb.group({});
   isLoading = false;
@@ -56,14 +64,13 @@ export class ResumeEditorComponent implements OnInit {
   isCheckingAts = false;
   aiLoadingField: string | null = null;
   showAiModal = false;
-  showStylePanel = false;
-  selectedText: string = '';
   userPlan: UserPlan = UserPlan.FREE;
   aiRemaining = 0;
   aiError: string | null = null;
   exportError: string | null = null;
 
-  activeSection: string = 'personal';
+  // ── Task 4: ATS drawer state ──────────────────────────────────────────────
+  showAtsDrawer = false;
   sections: EditorSection[] = [
     { id: 'personal', label: 'Personal Info', icon: '👤', expanded: true },
     { id: 'summary', label: 'Summary', icon: '📝', expanded: false },
@@ -71,26 +78,26 @@ export class ResumeEditorComponent implements OnInit {
     { id: 'education', label: 'Education', icon: '🎓', expanded: false },
     { id: 'skills', label: 'Skills', icon: '⭐', expanded: false }
   ];
-
-  styleOptions = {
-    fontSize: 12,
-    fontFamily: 'Arial',
-    textColor: '#000000',
-    backgroundColor: '#ffffff',
-    isBold: false,
-    isItalic: false,
-    isUnderline: false
-  };
-
   templates: Template[] = [];
 
   ngOnInit(): void {
+    // Task 3: Wire debounced auto-save once at the component level
+    this.autoSaveSubject
+      .pipe(debounceTime(1500), takeUntil(this.destroy$))
+      .subscribe(() => this.doAutoSave());
+
     this.loadUserPlan();
     this.loadResume();
   }
 
+  ngOnDestroy(): void {
+    // Task 3: Clean up all subscriptions to prevent ghost saves
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadUserPlan(): void {
-    this.userService.userPlan$.subscribe(plan => {
+    this.userService.userPlan$.pipe(takeUntil(this.destroy$)).subscribe(plan => {
       this.userPlan = plan;
       this.aiRemaining = this.aiService.getRemainingImprovements();
     });
@@ -120,26 +127,38 @@ export class ResumeEditorComponent implements OnInit {
 
   initializeNewResume(): void {
     const templateId = this.route.snapshot.queryParamMap.get('templateId') || 'professional';
-    this.resume = {
-      id: 'new-' + Date.now(),
-      title: 'My Resume',
-      templateId,
-      content: {
+
+    // Task 2: Read previewData from Angular router navigation state
+    const previewData = window.history.state?.previewData ?? null;
+
+    if (previewData) {
+      // Pre-populate the editor with the template's placeholder data
+      this.resume = {
+        id: 'new-' + Date.now(),
+        title: 'My Resume',
         templateId,
-        personalInfo: {
-          fullName: '',
-          email: '',
-          phone: '',
-          location: ''
+        content: { ...previewData, templateId },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    } else {
+      this.resume = {
+        id: 'new-' + Date.now(),
+        title: 'My Resume',
+        templateId,
+        content: {
+          templateId,
+          personalInfo: { fullName: '', email: '', phone: '', location: '' },
+          summary: '',
+          experience: [],
+          education: [],
+          skills: []
         },
-        summary: '',
-        experience: [],
-        education: [],
-        skills: []
-      },
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+
     this.initializeForm();
   }
 
@@ -157,15 +176,18 @@ export class ResumeEditorComponent implements OnInit {
         location: [content.personalInfo?.location || '']
       }),
       summary: [content.summary || ''],
-      experience: this.fb.array(content.experience?.map((exp: any) => 
+      experience: this.fb.array(content.experience?.map((exp: any) =>
         this.createExperienceGroup(exp)) || []),
-      education: this.fb.array(content.education?.map((edu: any) => 
+      education: this.fb.array(content.education?.map((edu: any) =>
         this.createEducationGroup(edu)) || []),
-      skills: this.fb.array(content.skills?.map((skill: string) => 
-        this.fb.group({ skill: [skill] })) || [])
+      skills: this.fb.array(content.skills?.map((skill: any) =>
+        this.fb.group({ skill: [typeof skill === 'string' ? skill : (skill?.skill || '')] })) || [])
     });
 
-    this.resumeForm.valueChanges.subscribe(() => this.autoSave());
+    // Task 3: Emit to the debounced Subject instead of calling autoSave directly
+    this.resumeForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.autoSaveSubject.next());
   }
 
   createExperienceGroup(exp?: any) {
@@ -174,7 +196,7 @@ export class ResumeEditorComponent implements OnInit {
       companyName: [exp?.companyName || ''],
       startDate: [exp?.startDate || ''],
       endDate: [exp?.endDate || ''],
-      responsibilities: [exp?.responsibilities?.join('\n') || '']
+      responsibilities: [exp?.responsibilities?.join?.('\n') ?? (exp?.responsibilities || '')]
     });
   }
 
@@ -216,47 +238,73 @@ export class ResumeEditorComponent implements OnInit {
     control.removeAt(index);
   }
 
-  autoSave(): void {
-    if (this.resumeForm.invalid) return;
+  /** Task 3: Called by debounced Subject — the actual HTTP save logic */
+  private doAutoSave(): void {
+    if (this.resumeForm.invalid || this.saveInProgress) return;
 
+    this.saveInProgress = true;
     this.isSaving = true;
-    const content = this.resumeForm.value;
-    
-    // Convert responsibilities back to array
+    const content = { ...this.resumeForm.value };
+
+    // Convert responsibilities text to array
     if (content.experience) {
       content.experience = content.experience.map((exp: any) => ({
         ...exp,
-        responsibilities: exp.responsibilities ? exp.responsibilities.split('\n').filter((r: string) => r.trim()) : []
+        responsibilities: exp.responsibilities
+          ? exp.responsibilities.split('\n').filter((r: string) => r.trim())
+          : []
       }));
     }
 
     if (this.resume?.id.startsWith('new-')) {
+      // Task 3: Guard the ID before navigating to prevent double-creation
+      const tempId = this.resume.id;
       this.resumeService.createResume({
         title: content.title,
         templateId: content.templateId,
         content
-      }).subscribe(
+      }).pipe(takeUntil(this.destroy$)).subscribe(
         created => {
-          this.resume = created;
-          this.isSaving = false;
-          this.router.navigate(['/resume', created.id, 'edit'], { replaceUrl: true });
+          // Only navigate if the resume hasn't already been created by a concurrent call
+          if (this.resume?.id === tempId) {
+            this.resume = created;
+            this.isSaving = false;
+            this.saveInProgress = false;
+            this.router.navigate(['/resume', created.id, 'edit'], { replaceUrl: true });
+          } else {
+            this.isSaving = false;
+            this.saveInProgress = false;
+          }
         },
         error => {
           console.error('Error creating resume:', error);
           this.isSaving = false;
+          this.saveInProgress = false;
         }
       );
     } else if (this.resume) {
-      this.resumeService.updateResume(this.resume.id, content).subscribe(
-        updated => {
-          this.isSaving = false;
-        },
-        error => {
-          console.error('Error updating resume:', error);
-          this.isSaving = false;
-        }
-      );
+      this.resumeService.updateResume(this.resume.id, content)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          () => {
+            this.isSaving = false;
+            this.saveInProgress = false;
+          },
+          error => {
+            console.error('Error updating resume:', error);
+            this.isSaving = false;
+            this.saveInProgress = false;
+          }
+        );
+    } else {
+      this.isSaving = false;
+      this.saveInProgress = false;
     }
+  }
+
+  // Public autoSave kept for the "Save" button — immediately emits to the Subject
+  autoSave(): void {
+    this.autoSaveSubject.next();
   }
 
   improveContent(field: string): void {
@@ -275,23 +323,26 @@ export class ResumeEditorComponent implements OnInit {
     this.showAiModal = true;
     this.aiError = null;
     this.aiLoadingField = field;
-    this.aiService.improveContent({ text: content, type: this.resolveAiType(field), resumeId: this.resume?.id }).subscribe(
-      result => {
-        this.resumeForm.patchValue({ [field]: result.improvedText });
-        this.aiService.incrementUsage();
-        this.aiRemaining = this.aiService.getRemainingImprovements();
-        this.showAiModal = false;
-        this.aiLoadingField = null;
-      },
-      error => {
-        console.error('AI error:', error);
-        this.aiError = error?.error?.message || 'AI enhancement failed. Please try again.';
-        this.showAiModal = false;
-        this.aiLoadingField = null;
-      }
-    );
+    this.aiService.improveContent({ text: content, type: this.resolveAiType(field), resumeId: this.resume?.id })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        result => {
+          this.resumeForm.patchValue({ [field]: result.improvedText });
+          this.aiService.incrementUsage();
+          this.aiRemaining = this.aiService.getRemainingImprovements();
+          this.showAiModal = false;
+          this.aiLoadingField = null;
+        },
+        error => {
+          console.error('AI error:', error);
+          this.aiError = error?.error?.message || 'AI enhancement failed. Please try again.';
+          this.showAiModal = false;
+          this.aiLoadingField = null;
+        }
+      );
   }
 
+  /** Task 2/4: export as pdf calling service */
   exportResume(format: 'pdf' | 'docx' | 'txt'): void {
     if (!this.resume) return;
 
@@ -302,7 +353,6 @@ export class ResumeEditorComponent implements OnInit {
 
     this.isExporting = true;
     this.exportError = null;
-
     this.exportService.exportAsPdf(this.resume.id).subscribe(
       blob => {
         const fileName = this.exportService.generateFileName(this.resume!.title, 'pdf');
@@ -317,21 +367,10 @@ export class ResumeEditorComponent implements OnInit {
     );
   }
 
+  /** Task 4: Opens the ATS drawer instead of alert() */
   performAtsCheck(): void {
     if (!this.resume) return;
-
-    this.isCheckingAts = true;
-    this.resumeService.performAtsCheck(this.resume.id).subscribe(
-      result => {
-        alert(`ATS Score: ${result.score}/100\nSuggestions: ${result.suggestions.length}`);
-        this.isCheckingAts = false;
-      },
-      error => {
-        console.error('ATS check error:', error);
-        alert(error?.message || 'ATS analysis failed. Please try again.');
-        this.isCheckingAts = false;
-      }
-    );
+    this.showAtsDrawer = true;
   }
 
   toggleSection(sectionId: string): void {
@@ -364,24 +403,10 @@ export class ResumeEditorComponent implements OnInit {
   isAiLoading(field: string): boolean {
     return this.aiLoadingField === field;
   }
-
-  showExportMenu(): void {
-    console.log('Export menu clicked');
-  }
-
   private resolveAiType(field: string): 'summary' | 'bullets' | 'skills' | 'general' {
-    if (field === 'summary') {
-      return 'summary';
-    }
-
-    if (field.includes('responsibilities')) {
-      return 'bullets';
-    }
-
-    if (field.startsWith('skills')) {
-      return 'skills';
-    }
-
+    if (field === 'summary') return 'summary';
+    if (field.includes('responsibilities')) return 'bullets';
+    if (field.startsWith('skills')) return 'skills';
     return 'general';
   }
 }

@@ -13,8 +13,8 @@
         <span *ngIf="!isCheckingAts">ATS Check</span>
         <span *ngIf="isCheckingAts" class="btn-spinner"></span>
       </button>
-      <button class="action-btn export-btn" [disabled]="isExporting" (click)="showExportMenu()">
-        <span *ngIf="!isExporting">Export</span>
+      <button class="action-btn export-btn" [disabled]="isExporting" (click)="exportResume('pdf')">
+        <span *ngIf="!isExporting">Export PDF</span>
         <span *ngIf="isExporting" class="btn-spinner"></span>
       </button>
       <button class="action-btn save-btn" (click)="saveResume()" [disabled]="isSaving">
@@ -201,7 +201,7 @@
         <h3>Live Preview</h3>
       </div>
 
-      <div class="preview-container" #previewContainer>
+      <div class="preview-container" #previewContainer id="resume-preview-container">
         <div class="resume-preview">
           <div class="preview-header-section">
             <h1 class="preview-name">{{ resumeForm.get('personalInfo.fullName')?.value || 'Your Name' }}</h1>
@@ -256,9 +256,6 @@
           <span *ngIf="!isExporting">Export as PDF</span>
           <span *ngIf="isExporting" class="btn-spinner"></span>
         </button>
-        <button class="export-docx-btn" (click)="exportResume('docx')" [disabled]="isExporting">
-          Export as DOCX
-        </button>
       </div>
     </div>
   </div>
@@ -268,3 +265,10 @@
     <p>Loading...</p>
   </div>
 </div>
+
+<!-- Task 4: ATS Checker Side Drawer -->
+<app-ats-checker
+  [isOpen]="showAtsDrawer"
+  [resumeId]="resume?.id || ''"
+  (close)="showAtsDrawer = false">
+</app-ats-checker>
