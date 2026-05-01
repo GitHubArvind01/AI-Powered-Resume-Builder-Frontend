@@ -4,6 +4,173 @@ import { Template } from '../models/template.model';
 
 @Injectable({ providedIn: 'root' })
 export class TemplateDataService {
+  private readonly techPersona = {
+    templateId: '',
+    personalInfo: {
+      fullName: 'Alex Chen',
+      email: 'alex.chen@techmail.io',
+      phone: '+1 (415) 882-3049',
+      location: 'San Francisco, CA'
+    },
+    summary: 'Full-stack software engineer with 6+ years of experience designing and delivering scalable cloud-native applications. Proficient in Java, Spring Boot, Angular, and AWS. Passionate about clean architecture, developer experience, and shipping products users love.',
+    experience: [
+      {
+        jobTitle: 'Senior Software Engineer',
+        companyName: 'CloudScale Inc.',
+        startDate: '2021-03',
+        endDate: '',
+        responsibilities: 'Architected a microservices platform serving 2M+ daily active users, reducing P95 latency by 38%\nLed migration of monolith to Kubernetes, cutting infrastructure costs by $420K annually\nMentored a team of 5 engineers and drove adoption of test-driven development across the org'
+      },
+      {
+        jobTitle: 'Software Engineer',
+        companyName: 'DataStream Labs',
+        startDate: '2018-06',
+        endDate: '2021-02',
+        responsibilities: 'Built real-time data pipelines processing 50M events/day using Apache Kafka and Spring Batch\nDeveloped Angular dashboard reducing analyst reporting time by 70%\nImplemented CI/CD pipelines with GitHub Actions, decreasing deployment time from 45 min to 8 min'
+      }
+    ],
+    education: [
+      {
+        degree: 'Bachelor of Science in Computer Science',
+        school: 'University of California, Berkeley',
+        graduationDate: '2018-05'
+      }
+    ],
+    skills: [
+      { skill: 'Java & Spring Boot' },
+      { skill: 'Angular & TypeScript' },
+      { skill: 'Kubernetes & Docker' },
+      { skill: 'AWS (ECS, RDS, Lambda)' },
+      { skill: 'Apache Kafka' },
+      { skill: 'System Design' }
+    ]
+  };
+
+  private readonly creativePersona = {
+    templateId: '',
+    personalInfo: {
+      fullName: 'Sofia Martinez',
+      email: 'sofia.design@creative.co',
+      phone: '+1 (310) 667-2211',
+      location: 'Los Angeles, CA'
+    },
+    summary: 'Award-winning UX designer and creative director with 8 years of experience crafting digital experiences for Fortune 500 brands. Expert in Figma, Adobe Creative Suite, and user research. Believer in design that is both beautiful and deeply functional.',
+    experience: [
+      {
+        jobTitle: 'Creative Director',
+        companyName: 'Pixel & Co. Agency',
+        startDate: '2020-01',
+        endDate: '',
+        responsibilities: 'Led rebrand initiative for 3 enterprise clients, resulting in average 22% increase in brand recognition\nManaged a team of 8 designers, establishing design system adopted across 12 product lines\nDelivered 40+ campaigns with average on-time rate of 97% and 100% client satisfaction'
+      },
+      {
+        jobTitle: 'Senior UX Designer',
+        companyName: 'Hulu',
+        startDate: '2016-09',
+        endDate: '2019-12',
+        responsibilities: 'Redesigned the content discovery experience, boosting user engagement by 31%\nConducted 200+ user research sessions and translated findings into actionable design patterns\nIntroduced component-based design system reducing design-to-dev handoff time by 50%'
+      }
+    ],
+    education: [
+      {
+        degree: 'BFA in Graphic Design',
+        school: 'ArtCenter College of Design',
+        graduationDate: '2016-05'
+      }
+    ],
+    skills: [
+      { skill: 'Figma & Sketch' },
+      { skill: 'Adobe Creative Suite' },
+      { skill: 'User Research & Testing' },
+      { skill: 'Brand Identity' },
+      { skill: 'Motion Design' },
+      { skill: 'Design Systems' }
+    ]
+  };
+
+  private readonly executivePersona = {
+    templateId: '',
+    personalInfo: {
+      fullName: 'Jonathan Reid',
+      email: 'j.reid@executiveconsult.com',
+      phone: '+1 (212) 540-9876',
+      location: 'New York, NY'
+    },
+    summary: 'C-suite executive with 20+ years of experience driving transformative growth in Fortune 100 companies. Led global operations spanning 15 countries with P&L responsibility exceeding $800M. Expert in strategic M&A, organisational turnaround, and board-level stakeholder management.',
+    experience: [
+      {
+        jobTitle: 'Chief Operating Officer',
+        companyName: 'Meridian Global Holdings',
+        startDate: '2017-01',
+        endDate: '',
+        responsibilities: 'Spearheaded operational restructuring that delivered $120M in annual cost savings within 24 months\nOverseen 3 strategic acquisitions totalling $2.1B, fully integrated within 12 months each\nBuilt and led high-performance leadership team of 14 VPs across operations, finance, and supply chain'
+      },
+      {
+        jobTitle: 'VP of Strategy & Operations',
+        companyName: 'Apex Ventures',
+        startDate: '2010-04',
+        endDate: '2016-12',
+        responsibilities: 'Drove 40% EBITDA improvement through operational excellence initiatives across 6 business units\nLaunched market expansion strategy into APAC, generating $180M in new revenue within 3 years\nChaired cross-functional PMO responsible for portfolio of 25+ concurrent strategic initiatives'
+      }
+    ],
+    education: [
+      {
+        degree: 'MBA, Finance & Strategy',
+        school: 'Harvard Business School',
+        graduationDate: '2004-05'
+      }
+    ],
+    skills: [
+      { skill: 'P&L Management' },
+      { skill: 'M&A Strategy' },
+      { skill: 'Operational Excellence' },
+      { skill: 'Board Relations' },
+      { skill: 'Global Expansion' },
+      { skill: 'Change Management' }
+    ]
+  };
+
+  private readonly minimalPersona = {
+    templateId: '',
+    personalInfo: {
+      fullName: 'Jamie Park',
+      email: 'jamie.park@work.me',
+      phone: '+1 (206) 344-8821',
+      location: 'Seattle, WA'
+    },
+    summary: 'Product manager with 5 years of experience shipping B2B SaaS products from 0 to 1. Skilled in balancing user needs with business goals. Data-driven decision maker with a background in computer science.',
+    experience: [
+      {
+        jobTitle: 'Senior Product Manager',
+        companyName: 'Notion',
+        startDate: '2022-01',
+        endDate: '',
+        responsibilities: 'Owned the Collaboration feature set used by 4M+ teams globally\nIncreased feature adoption by 55% through iterative A/B testing and user interviews\nDefined and shipped 3 major releases on schedule with cross-functional teams of 20+'
+      },
+      {
+        jobTitle: 'Product Manager',
+        companyName: 'Smartsheet',
+        startDate: '2019-06',
+        endDate: '2021-12',
+        responsibilities: 'Launched mobile app v2.0 that drove 3x increase in mobile DAUs within 60 days\nPrioritised backlog of 150+ items using RICE scoring aligned to OKRs\nCollaborated with enterprise sales to close $2M ARR deal by shipping custom workflow builder'
+      }
+    ],
+    education: [
+      {
+        degree: 'Bachelor of Science in Information Systems',
+        school: 'University of Washington',
+        graduationDate: '2019-06'
+      }
+    ],
+    skills: [
+      { skill: 'Product Strategy' },
+      { skill: 'Agile & Scrum' },
+      { skill: 'SQL & Analytics' },
+      { skill: 'User Research' },
+      { skill: 'Roadmapping' }
+    ]
+  };
+
   private templates: Template[] = [
     {
       id: 'professional-classic',
@@ -17,7 +184,8 @@ export class TemplateDataService {
         headingFill: '#1d4ed8'
       }),
       isPro: false,
-      category: 'professional'
+      category: 'professional',
+      previewData: { ...this.techPersona, templateId: 'professional-classic' }
     },
     {
       id: 'professional-minimal',
@@ -32,7 +200,8 @@ export class TemplateDataService {
         divider: '#d1d5db'
       }),
       isPro: false,
-      category: 'professional'
+      category: 'professional',
+      previewData: { ...this.minimalPersona, templateId: 'professional-minimal' }
     },
     {
       id: 'professional-modern',
@@ -47,7 +216,8 @@ export class TemplateDataService {
         headingFill: '#1e293b'
       }),
       isPro: false,
-      category: 'professional'
+      category: 'professional',
+      previewData: { ...this.techPersona, templateId: 'professional-modern' }
     },
     {
       id: 'modern-sleek',
@@ -61,7 +231,8 @@ export class TemplateDataService {
         headingFill: '#115e59'
       }),
       isPro: false,
-      category: 'modern'
+      category: 'modern',
+      previewData: { ...this.minimalPersona, templateId: 'modern-sleek' }
     },
     {
       id: 'modern-gradient',
@@ -75,7 +246,8 @@ export class TemplateDataService {
         headingFill: '#c2410c'
       }),
       isPro: false,
-      category: 'modern'
+      category: 'modern',
+      previewData: { ...this.techPersona, templateId: 'modern-gradient' }
     },
     {
       id: 'creative-colorful',
@@ -90,7 +262,8 @@ export class TemplateDataService {
         headingFill: '#be123c'
       }),
       isPro: false,
-      category: 'creative'
+      category: 'creative',
+      previewData: { ...this.creativePersona, templateId: 'creative-colorful' }
     },
     {
       id: 'minimal-clean',
@@ -105,7 +278,8 @@ export class TemplateDataService {
         divider: '#cbd5e1'
       }),
       isPro: false,
-      category: 'minimal'
+      category: 'minimal',
+      previewData: { ...this.minimalPersona, templateId: 'minimal-clean' }
     },
     {
       id: 'pro-executive',
@@ -120,7 +294,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'executive'
+      category: 'executive',
+      previewData: { ...this.executivePersona, templateId: 'pro-executive' }
     },
     {
       id: 'pro-tech',
@@ -136,7 +311,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'professional'
+      category: 'professional',
+      previewData: { ...this.techPersona, templateId: 'pro-tech' }
     },
     {
       id: 'pro-creative-plus',
@@ -151,7 +327,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'creative'
+      category: 'creative',
+      previewData: { ...this.creativePersona, templateId: 'pro-creative-plus' }
     },
     {
       id: 'pro-corporate',
@@ -166,7 +343,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'professional'
+      category: 'professional',
+      previewData: { ...this.executivePersona, templateId: 'pro-corporate' }
     },
     {
       id: 'pro-artistic',
@@ -182,7 +360,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'creative'
+      category: 'creative',
+      previewData: { ...this.creativePersona, templateId: 'pro-artistic' }
     },
     {
       id: 'pro-minimalist-premium',
@@ -197,7 +376,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'minimal'
+      category: 'minimal',
+      previewData: { ...this.minimalPersona, templateId: 'pro-minimalist-premium' }
     },
     {
       id: 'pro-interactive',
@@ -212,7 +392,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'modern'
+      category: 'modern',
+      previewData: { ...this.techPersona, templateId: 'pro-interactive' }
     },
     {
       id: 'pro-premium-dark',
@@ -229,7 +410,8 @@ export class TemplateDataService {
         darkText: true
       }),
       isPro: true,
-      category: 'professional'
+      category: 'professional',
+      previewData: { ...this.techPersona, templateId: 'pro-premium-dark' }
     },
     {
       id: 'pro-vibrant-rainbow',
@@ -244,7 +426,8 @@ export class TemplateDataService {
         premium: true
       }),
       isPro: true,
-      category: 'creative'
+      category: 'creative',
+      previewData: { ...this.creativePersona, templateId: 'pro-vibrant-rainbow' }
     }
   ];
 
