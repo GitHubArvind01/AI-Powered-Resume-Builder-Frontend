@@ -89,10 +89,17 @@
 
         <div id="text-mid"><span>OR</span></div>
 
-        <button type="button" class="google-btn" [disabled]="isLoading" (click)="loginWithGoogle()">
-          <img src="https://developers.google.com/identity/images/g-logo.png" alt="google" />
-          <span *ngIf="!isLoading">Continue with Google</span>
-          <span *ngIf="isLoading" class="loader"></span>
+        <button
+          type="button"
+          class="google-btn"
+          [disabled]="isGoogleLoading || isLoading"
+          (click)="loginWithGoogle()">
+          <img *ngIf="!isGoogleLoading" src="https://developers.google.com/identity/images/g-logo.png" alt="google" />
+
+          <span *ngIf="!isGoogleLoading">Continue with Google</span>
+
+          <span *ngIf="isGoogleLoading" class="loader"></span>
+          <span *ngIf="isGoogleLoading">Processing...</span>
         </button>
       </form>
     </ng-container>

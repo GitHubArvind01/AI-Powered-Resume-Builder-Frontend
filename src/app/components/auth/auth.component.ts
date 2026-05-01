@@ -18,6 +18,7 @@ export class AuthComponent implements OnInit {
   // UI State
   isLoginMode = true;
   isLoading = false;
+  isGoogleLoading = false;
   currentStep: AuthStep = 'LOGIN_SIGNUP';
   errorMessage = '';
   successMessage = '';
@@ -187,21 +188,23 @@ export class AuthComponent implements OnInit {
   // --- Helpers ---
 
   private processGoogleLogin(code: string) {
-    this.isLoading = true;
+    this.isGoogleLoading = true;
     this.authService.handleGoogleCallback(code).subscribe({
       next: () => {
-        this.isLoading = false;
+        this.isGoogleLoading = false;
         this.router.navigate([this.authService.isAdmin() ? '/admin' : '/dashboard'])
       },
       error: (err) => {
-        this.isLoading = false;
+        this.isGoogleLoading = false;
         this.showError(this.extractMessage(err));
       }
     });
   }
 
   loginWithGoogle() {
-    this.isLoading = true;
+    if (this.isGoogleLoading) return; // prevent multiple clicks
+
+    this.isGoogleLoading = true;
     this.authService.initiateGoogleLogin();
   }
 
