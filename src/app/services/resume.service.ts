@@ -23,12 +23,18 @@ interface AtsBackendResponse {
   atsScore: number;
   improvements?: string[];
   missingKeywords?: string[];
+  matchedKeywords?: string[];
   overallFeedback?: string;
+  totalKeywordsChecked?: number;
+  keywordsMatched?: number;
 }
 
 export interface AtsCheckResult {
   score: number;
   suggestions: string[];
+  overallFeedback?: string;
+  matchedKeywords?: string[];
+  missingKeywords?: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -139,7 +145,10 @@ export class ResumeService {
         }).pipe(
           map((response) => ({
             score: response.atsScore ?? 0,
-            suggestions: this.buildAtsSuggestions(response)
+            suggestions: this.buildAtsSuggestions(response),
+            overallFeedback: response.overallFeedback,
+            matchedKeywords: response.matchedKeywords ?? [],
+            missingKeywords: response.missingKeywords ?? []
           })),
           catchError((error) => {
             const message = error?.error?.message || error?.message || 'ATS analysis failed. Please try again.';
