@@ -2,10 +2,10 @@ export interface Template {
   id: string;
   name: string;
   description: string;
-  imageUrl: string;
-  isPro: boolean;
+  thumbnailUrl: string;
+  isPremium: boolean;
   isFavorite?: boolean;
-  category: 'professional' | 'modern' | 'creative' | 'minimal' | 'executive';
+  category: string;
   previewData?: any; // Realistic placeholder resume content for editor pre-population
 }
 
