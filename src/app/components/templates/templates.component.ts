@@ -46,11 +46,11 @@ export class TemplatesComponent implements OnInit {
 
   categories = [
     { id: 'all', label: 'All Templates' },
-    { id: 'professional', label: 'Professional' },
-    { id: 'modern', label: 'Modern' },
-    { id: 'creative', label: 'Creative' },
-    { id: 'minimal', label: 'Minimal' },
-    { id: 'executive', label: 'Executive' }
+    { id: 'PROFESSIONAL', label: 'Professional' },
+    { id: 'MODERN', label: 'Modern' },
+    { id: 'CREATIVE', label: 'Creative' },
+    { id: 'MINIMAL', label: 'Minimal' },
+    { id: 'EXECUTIVE', label: 'Executive' }
   ];
 
   ngOnInit(): void {
@@ -84,7 +84,9 @@ export class TemplatesComponent implements OnInit {
     let filtered = this.templates;
 
     if (this.selectedCategory !== 'all') {
-      filtered = filtered.filter((template) => template.category === this.selectedCategory);
+      filtered = filtered.filter(
+        (template) => template.category.toLowerCase() === this.selectedCategory.toLowerCase()
+      );
     }
 
     this.filteredTemplates = filtered.slice(0, this.maxTemplates);
@@ -101,7 +103,7 @@ export class TemplatesComponent implements OnInit {
     }
 
     this.selectedTemplate = template;
-    if (template.isPro && this.currentUserPlan === UserPlan.FREE) {
+    if (template.isPremium && this.currentUserPlan === UserPlan.FREE) {
       this.showUpgradeModal = true;
       return;
     }
@@ -125,15 +127,15 @@ export class TemplatesComponent implements OnInit {
   }
 
   getTemplateLabel(template: Template): string {
-    return template.isPro ? 'PRO' : 'FREE';
+    return template.isPremium ? 'PRO' : 'FREE';
   }
 
   getPlanColor(template: Template): string {
-    return template.isPro ? 'pro-badge' : 'free-badge';
+    return template.isPremium ? 'pro-badge' : 'free-badge';
   }
 
   isLocked(template: Template): boolean {
-    return template.isPro && this.currentUserPlan === UserPlan.FREE;
+    return template.isPremium && this.currentUserPlan === UserPlan.FREE;
   }
 
   isSelecting(template: Template): boolean {

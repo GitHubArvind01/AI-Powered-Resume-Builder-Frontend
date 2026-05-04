@@ -2,11 +2,8 @@
   width: 100%;
   padding: 2rem;
   margin: 2rem 0;
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 32%),
-    linear-gradient(180deg, #fff7ed 0%, #ffffff 38%, #f8fafc 100%);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  background: #f8f9fb;
 }
 
 .templates-header {
@@ -22,7 +19,7 @@
 
 .templates-header p {
   margin: 0;
-  color: #64748b;
+  color: #6b7280;
 }
 
 .category-filter {
@@ -35,25 +32,25 @@
 
 .category-btn {
   padding: 0.65rem 1.15rem;
-  border: 1px solid #cbd5e1;
-  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
   border-radius: 999px;
   cursor: pointer;
   font-weight: 600;
-  color: #334155;
+  color: #374151;
   transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .category-btn:hover {
   transform: translateY(-1px);
-  border-color: #0f766e;
-  box-shadow: 0 12px 20px rgba(15, 118, 110, 0.12);
+  border-color: #d1d5db;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 .category-btn.active {
-  background: #0f766e;
+  background: #111827;
   color: #fff;
-  border-color: #0f766e;
+  border-color: #111827;
 }
 
 .loading-state {
@@ -61,7 +58,7 @@
   place-items: center;
   gap: 1rem;
   min-height: 240px;
-  color: #64748b;
+  color: #6b7280;
 }
 
 .spinner,
@@ -73,16 +70,16 @@
 .spinner {
   width: 42px;
   height: 42px;
-  border: 4px solid rgba(15, 118, 110, 0.15);
-  border-top-color: #0f766e;
+  border: 4px solid rgba(17, 24, 39, 0.1);
+  border-top-color: #111827;
 }
 
 .button-spinner {
   display: inline-block;
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  border: 2px solid rgba(17, 24, 39, 0.2);
+  border-top-color: #111827;
 }
 
 @keyframes spin {
@@ -93,45 +90,68 @@
 
 .templates-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
 }
 
 .template-card {
   display: flex;
   flex-direction: column;
+  gap: 0.8rem;
   min-height: 100%;
-  overflow: hidden;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  text-align: left;
 }
 
-.template-card:hover {
-  transform: translateY(-6px);
-  border-color: rgba(15, 118, 110, 0.26);
-  box-shadow: 0 28px 40px rgba(15, 23, 42, 0.14);
+.template-card:disabled {
+  cursor: wait;
 }
 
 .template-image {
   position: relative;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  border-radius: 4px;
+  background: #eef2f7;
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .template-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 220ms ease;
+  display: block;
+  border-radius: 4px;
 }
 
-.template-card:hover .template-image img {
-  transform: scale(1.04);
+.template-card:hover .template-image,
+.template-card:focus-visible .template-image {
+  transform: scale(1.02);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
+}
+
+.template-card:focus-visible {
+  outline: none;
+}
+
+.thumbnail-badge {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.35rem;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.84);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .pro-overlay {
@@ -142,7 +162,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: rgba(15, 23, 42, 0.62);
+  background: rgba(17, 24, 39, 0.48);
   opacity: 0;
   transition: opacity 220ms ease;
 }
@@ -153,91 +173,77 @@
 
 .lock-icon,
 .lock-icon-large {
-  color: #fbbf24;
+  color: #ffffff;
 }
 
 .upgrade-text {
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .template-info {
   display: grid;
-  gap: 0.7rem;
-  padding: 1rem 1rem 0.75rem;
-  flex: 1;
+  gap: 0.3rem;
+  padding: 0 0.15rem;
 }
 
 .template-title-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .template-info h3 {
   margin: 0;
-  font-size: 1.05rem;
-  color: #0f172a;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.template-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.template-category {
+  color: #9ca3af;
+  font-size: 0.82rem;
+  text-transform: capitalize;
 }
 
 .description {
   margin: 0;
-  color: #64748b;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  color: #6b7280;
+  font-size: 0.87rem;
+  line-height: 1.45;
 }
 
 .plan-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.28rem 0.7rem;
+  padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 600;
 }
 
 .free-badge {
-  background: #dcfce7;
-  color: #166534;
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .pro-badge {
-  background: #ffedd5;
-  color: #c2410c;
+  background: #111827;
+  color: #ffffff;
 }
 
-.template-action {
-  padding: 0 1rem 1rem;
-}
-
-.use-template-btn,
 .modal-action-btn,
 .modal-cancel-btn,
 .close-btn {
   transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease, background-color 180ms ease;
-}
-
-.use-template-btn {
-  width: 100%;
-  padding: 0.85rem 1rem;
-  border: none;
-  border-radius: 12px;
-  background: #0f766e;
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.use-template-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 20px rgba(15, 118, 110, 0.22);
-}
-
-.use-template-btn:disabled {
-  opacity: 0.8;
-  cursor: wait;
 }
 
 .modal-overlay {
@@ -269,7 +275,7 @@
   border: none;
   border-radius: 999px;
   background: #f8fafc;
-  color: #64748b;
+  color: #6b7280;
   cursor: pointer;
 }
 
@@ -290,7 +296,7 @@
 
 .modal-content > p {
   margin: 0 0 1.5rem;
-  color: #64748b;
+  color: #6b7280;
   line-height: 1.6;
 }
 
@@ -334,7 +340,7 @@
 
 .modal-action-btn {
   margin-bottom: 0.75rem;
-  background: #0f766e;
+  background: #111827;
   color: #fff;
 }
 
