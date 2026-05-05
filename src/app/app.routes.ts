@@ -40,7 +40,6 @@ export const routes: Routes = [
     loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
   },
   { path: 'resume/create', component: ResumeEditorComponent, canActivate: [authGuard] },
-  { path: 'resume/:id/edit', component: ResumeEditorComponent, canActivate: [authGuard] },
   {
     path: 'resume/:id/edit',
     canActivate: [authGuard],
