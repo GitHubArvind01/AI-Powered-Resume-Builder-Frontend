@@ -1,37 +1,41 @@
 <section class="hero">
   <div>
     <p class="eyebrow">Admin Overview</p>
-    <h2>Monitor users, account health, and premium adoption from one place.</h2>
+    <h2>Track platform growth, monetization, and usage health from one premium command surface.</h2>
   </div>
-  <a routerLink="/admin/users" class="cta">Open User Management</a>
+  <a routerLink="/admin/users" class="cta">Manage Users</a>
 </section>
 
 <p *ngIf="isLoading" class="state">Loading dashboard metrics...</p>
 <p *ngIf="errorMessage" class="state error">{{ errorMessage }}</p>
 
-<div *ngIf="stats" class="stats-grid">
-  <article class="stat-card">
-    <span>Total Users</span>
-    <strong>{{ stats.totalUsers }}</strong>
-  </article>
-  <article class="stat-card">
-    <span>Active Users</span>
-    <strong>{{ stats.activeUsers }}</strong>
-  </article>
-  <article class="stat-card">
-    <span>Premium Users</span>
-    <strong>{{ stats.premiumUsers }}</strong>
-  </article>
-  <article class="stat-card">
-    <span>Free Users</span>
-    <strong>{{ stats.freeUsers }}</strong>
-  </article>
-  <article class="stat-card">
-    <span>Inactive Users</span>
-    <strong>{{ stats.inactiveUsers }}</strong>
-  </article>
-  <article class="stat-card">
-    <span>Admins</span>
-    <strong>{{ stats.adminUsers }}</strong>
-  </article>
-</div>
+<section *ngIf="stats" class="analytics-grid">
+  <div class="stats-grid">
+    <article *ngFor="let card of statCards" class="stat-card">
+      <span>{{ card.label }}</span>
+      <strong>{{ card.value }}</strong>
+      <p>{{ card.detail }}</p>
+    </article>
+  </div>
+
+  <aside class="insight-panel">
+    <div class="panel-card">
+      <p class="eyebrow dark">Plan Mix</p>
+      <div class="mix-row" *ngFor="let item of planMix">
+        <div class="mix-copy">
+          <strong>{{ item.label }}</strong>
+          <span>{{ item.value }} users</span>
+        </div>
+        <div class="mix-bar">
+          <div class="mix-fill" [class]="item.tone" [style.width.%]="stats.totalUsers ? (item.value / stats.totalUsers) * 100 : 0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card spotlight">
+      <p class="eyebrow dark">Snapshot</p>
+      <h3>{{ stats.premiumUsers }} premium users driving subscription growth</h3>
+      <p>Use this dashboard to watch free-to-premium conversion, inactive-user recovery, and admin coverage at a glance.</p>
+    </div>
+  </aside>
+</section>
