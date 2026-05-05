@@ -8,6 +8,7 @@ import { AuthStateService } from './auth-state.service';
 export interface AiImprovementRequest {
   text: string;
   type: 'summary' | 'bullets' | 'job-description' | 'skills' | 'general';
+  action?: 'generate' | 'improve';
   context?: string;
   resumeId?: string | number | null;
 }
@@ -17,6 +18,14 @@ export interface AiImprovementResponse {
   improvedText: string;
   suggestions: string[];
   confidence: number;
+  remainingUsage: number;
+  limitReached: boolean;
+}
+
+export interface AiUsageSummary {
+  usage: number;
+  remaining: number;
+  total: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -25,7 +34,7 @@ export class AiService {
   private authState = inject(AuthStateService);
   private apiUrl = `${environment.gatewayUrl}/ai`;
 
-  private aiUsageSubject = new BehaviorSubject<number>(0);
+  private aiUsageSubject = new BehaviorSubject<AiUsageSummary>({ usage: 0, remaining: 5, total: 5 });
   public aiUsage$ = this.aiUsageSubject.asObservable();
 
   constructor() {
@@ -43,6 +52,7 @@ export class AiService {
       resumeId: request.resumeId ? Number(request.resumeId) : null,
       text: request.text,
       type: request.type,
+      action: request.action ?? 'improve',
       context: request.context
     });
   }
@@ -50,13 +60,13 @@ export class AiService {
   refreshUsage(): void {
     const userId = this.authState.getCurrentUserId();
     if (!userId) {
-      this.aiUsageSubject.next(0);
+      this.aiUsageSubject.next({ usage: 0, remaining: 5, total: 5 });
       return;
     }
 
-    this.http.get<{ usage: number }>(`${this.apiUrl}/usage/${userId}`).pipe(
-      catchError(() => of({ usage: 0 }))
-    ).subscribe((result) => this.aiUsageSubject.next(result.usage));
+    this.http.get<AiUsageSummary>(`${this.apiUrl}/usage/${userId}`).pipe(
+      catchError(() => of({ usage: 0, remaining: 5, total: 5 }))
+    ).subscribe((result) => this.aiUsageSubject.next(result));
   }
 
   canUseAiFeatures(): boolean {
@@ -68,12 +78,25 @@ export class AiService {
       return 999;
     }
 
-    const freeLimit = 5;
-    return Math.max(0, freeLimit - this.aiUsageSubject.value);
+    return Math.max(0, this.aiUsageSubject.value.remaining);
   }
 
   incrementUsage(): void {
     const current = this.aiUsageSubject.value;
-    this.aiUsageSubject.next(current + 1);
+
+    this.aiUsageSubject.next({
+      ...current,
+      usage: current.usage + 1,
+      remaining: Math.max(0, current.remaining - 1)
+    });
+  }
+
+  syncUsage(remainingUsage: number): void {
+    const current = this.aiUsageSubject.value;
+    this.aiUsageSubject.next({
+      ...current,
+      usage: Math.max(0, current.total - remainingUsage),
+      remaining: remainingUsage
+    });
   }
 }

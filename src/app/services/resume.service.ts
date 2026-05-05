@@ -31,10 +31,40 @@ interface AtsBackendResponse {
 
 export interface AtsCheckResult {
   score: number;
+  keywordMatchPercentage?: number;
   suggestions: string[];
   overallFeedback?: string;
   matchedKeywords?: string[];
   missingKeywords?: string[];
+}
+
+export interface ResumeBuilderContent {
+  templateId: string;
+  personalInfo: {
+    fullName: string;
+    email: string;
+    phone: string;
+    location: string;
+    headline?: string;
+  };
+  summary: string;
+  experience: Array<{
+    company: string;
+    role: string;
+    duration: string;
+    highlights: string[];
+  }>;
+  education: Array<{
+    institution: string;
+    degree: string;
+    year: string;
+  }>;
+  skills: string[];
+  projects: Array<{
+    name: string;
+    description: string;
+    link?: string;
+  }>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -102,10 +132,10 @@ export class ResumeService {
   }
 
   updateResume(id: string, data: any): Observable<Resume> {
-    const { title, ...content } = data;
+    const { title, content, ...rest } = data;
     const payload = {
       title: title ?? 'My Resume',
-      content: JSON.stringify(content),
+      content: JSON.stringify(content ?? rest),
       isPublic: false,
       status: 'DRAFT',
       description: 'Updated from editor'
@@ -134,11 +164,29 @@ export class ResumeService {
     );
   }
 
-  uploadResume(file: File): Observable<any> {
+  uploadResume(file: File): Observable<AtsCheckResult> {
     const formData = new FormData();
     formData.append('file', file);
 
-    return this.http.post('/api/ai/ats-check', formData);
+    return this.http.post<{
+      score: number;
+      keywordMatchPercentage?: number;
+      suggestions?: string[];
+      keywordsMatched?: string[];
+      missingKeywords?: string[];
+    }>(`${this.aiUrl}/ats-check`, formData).pipe(
+      map((response) => ({
+        score: response.score ?? 0,
+        keywordMatchPercentage: response.keywordMatchPercentage ?? response.score ?? 0,
+        suggestions: response.suggestions ?? [],
+        matchedKeywords: response.keywordsMatched ?? [],
+        missingKeywords: response.missingKeywords ?? []
+      })),
+      catchError((error) => {
+        const message = error?.error?.message || error?.message || 'ATS analysis failed. Please try again.';
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   performAtsCheckFromUpload(file: File, jobDescription: string = ''): Observable<AtsCheckResult> {
@@ -156,6 +204,9 @@ export class ResumeService {
     }).pipe(
       map((response) => ({
         score: response.atsScore ?? 0,
+        keywordMatchPercentage: response.totalKeywordsChecked
+          ? Math.round(((response.keywordsMatched ?? 0) / response.totalKeywordsChecked) * 100)
+          : response.atsScore ?? 0,
         suggestions: this.buildAtsSuggestions(response),
         overallFeedback: response.overallFeedback,
         matchedKeywords: response.matchedKeywords ?? [],
@@ -189,6 +240,9 @@ export class ResumeService {
         }).pipe(
           map((response) => ({
             score: response.atsScore ?? 0,
+            keywordMatchPercentage: response.totalKeywordsChecked
+              ? Math.round(((response.keywordsMatched ?? 0) / response.totalKeywordsChecked) * 100)
+              : response.atsScore ?? 0,
             suggestions: this.buildAtsSuggestions(response),
             overallFeedback: response.overallFeedback,
             matchedKeywords: response.matchedKeywords ?? [],
@@ -254,12 +308,33 @@ export class ResumeService {
         fullName: '',
         email: '',
         phone: '',
-        location: ''
+        location: '',
+        headline: ''
       },
       summary: '',
-      experience: [],
-      education: [],
-      skills: []
-    };
+      experience: [
+        {
+          company: '',
+          role: '',
+          duration: '',
+          highlights: ['']
+        }
+      ],
+      education: [
+        {
+          institution: '',
+          degree: '',
+          year: ''
+        }
+      ],
+      skills: [],
+      projects: [
+        {
+          name: '',
+          description: '',
+          link: ''
+        }
+      ]
+    } as ResumeBuilderContent;
   }
 }
