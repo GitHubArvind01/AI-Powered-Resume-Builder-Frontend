@@ -337,4 +337,46 @@ export class ResumeService {
       ]
     } as ResumeBuilderContent;
   }
+
+  // src/app/services/resume.service.ts
+
+  public createFreshTemplateData(templateId: string): ResumeBuilderContent {
+    return {
+      templateId,
+      personalInfo: {
+        fullName: 'Arvind Kumar', // Placeholder data
+        email: 'arvind@example.com',
+        phone: '+91 98765 43210',
+        location: 'Bhopal, India',
+        headline: 'Full Stack Java Developer'
+      },
+      summary: 'Experienced Full Stack Engineer with expertise in Spring Boot and Angular. Passionate about building scalable microservices and AI-driven applications.',
+      experience: [
+        {
+          company: 'Tech Solutions Inc.',
+          role: 'Senior Developer',
+          duration: '2022 - Present',
+          highlights: [
+            'Led the migration of monolithic architecture to microservices[cite: 5].',
+            'Integrated AI capabilities for automated data processing.'
+          ]
+        }
+      ],
+      education: [
+        {
+          institution: 'Technocrats Institute of Technology',
+          degree: 'Bachelor of Technology',
+          year: '2025'
+        }
+      ],
+      skills: ['Java', 'Spring Boot', 'Angular', 'AWS', 'Docker'],
+      projects: [
+        {
+          name: 'AI Resume Builder',
+          description: 'A microservices-based platform for creating ATS-friendly resumes[cite: 5].',
+          link: 'https://github.com/arvind/resume-ai'
+        }
+      ]
+    };
+  }
 }
