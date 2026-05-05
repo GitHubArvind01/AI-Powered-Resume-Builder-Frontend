@@ -120,8 +120,52 @@ export class ResumeService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  uploadResume(file: File): Observable<Resume> {
-    return throwError(() => new Error(`Upload for "${file.name}" is not implemented by the current backend.`));
+  saveResumeContent(templateId: string, content: string): Observable<Resume> {
+    const payload = {
+      title: 'Edited Resume',
+      content: JSON.stringify({ templateId, htmlContent: content }),
+      isPublic: false,
+      status: 'DRAFT',
+      description: 'Saved from inline editor'
+    };
+
+    return this.http.post<BackendResumeResponse>(this.apiUrl, payload).pipe(
+      map((resume) => this.mapResume(resume))
+    );
+  }
+
+  uploadResume(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post('/api/ai/ats-check', formData);
+  }
+
+  performAtsCheckFromUpload(file: File, jobDescription: string = ''): Observable<AtsCheckResult> {
+    const userId = this.authState.getCurrentUserId();
+    if (!userId) {
+      return throwError(() => new Error('User session is not ready.'));
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('jobDescription', jobDescription);
+
+    return this.http.post<AtsBackendResponse>(`${this.aiUrl}/check-ats/upload`, formData, {
+      headers: { 'X-User-Id': userId.toString() }
+    }).pipe(
+      map((response) => ({
+        score: response.atsScore ?? 0,
+        suggestions: this.buildAtsSuggestions(response),
+        overallFeedback: response.overallFeedback,
+        matchedKeywords: response.matchedKeywords ?? [],
+        missingKeywords: response.missingKeywords ?? []
+      })),
+      catchError((error) => {
+        const message = error?.error?.message || error?.message || 'ATS analysis failed. Please try again.';
+        return throwError(() => new Error(message));
+      })
+    );
   }
 
   performAtsCheck(resumeId: string, jobDescription: string = ''): Observable<any> {

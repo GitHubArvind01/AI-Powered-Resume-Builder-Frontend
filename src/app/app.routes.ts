@@ -20,7 +20,7 @@ export const routes: Routes = [
   { path: 'payment', component: PaymentComponent, canActivate: [authGuard] },
   { path: 'payment-success', component: PaymentSuccessComponent, canActivate: [authGuard] },
   { path: 'payment-failed', component: PaymentFailedComponent, canActivate: [authGuard] },
-  { path: 'resume/create', component: ResumeEditorComponent, canActivate: [authGuard] },
+  { path: 'editor/:templateId', component: ResumeEditorComponent, canActivate: [authGuard] },
   { path: 'resume/:id/edit', component: ResumeEditorComponent, canActivate: [authGuard] },
   {
     path: 'admin',

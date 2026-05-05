@@ -61,12 +61,12 @@ export class TemplatesComponent implements OnInit {
 
   loadTemplates(): void {
     this.templateDataService.getAllTemplates().subscribe({
-      next: (templates) => {
+      next: (templates: Template[]) => {
         this.templates = templates;
         this.filterTemplates();
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading templates:', error);
         this.isLoading = false;
       }
@@ -74,7 +74,7 @@ export class TemplatesComponent implements OnInit {
   }
 
   loadUserPlan(): void {
-    this.userService.userPlan$.subscribe((plan) => {
+    this.userService.userPlan$.subscribe((plan: UserPlan) => {
       this.currentUserPlan = plan;
       this.filterTemplates();
     });
@@ -109,10 +109,7 @@ export class TemplatesComponent implements OnInit {
     }
 
     this.selectingTemplateId = template.id;
-    this.router.navigate(['/resume/create'], {
-      queryParams: { templateId: template.id },
-      state: { previewData: template.previewData ?? null }
-    });
+    this.router.navigate(['/editor', template.id]);
   }
 
   closeUpgradeModal(): void {

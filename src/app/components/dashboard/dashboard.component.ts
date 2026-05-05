@@ -37,11 +37,11 @@ export class DashboardComponent implements OnInit {
   }
 
   loadUserProfile(): void {
-    this.userService.userProfile$.subscribe(profile => {
+    this.userService.userProfile$.subscribe((profile: UserProfile | null) => {
       this.userProfile = profile;
     });
 
-    this.userService.userPlan$.subscribe(plan => {
+    this.userService.userPlan$.subscribe((plan: UserPlan) => {
       this.userPlan = plan;
     });
   }
@@ -49,11 +49,11 @@ export class DashboardComponent implements OnInit {
   loadUserResumes(): void {
     this.isLoading = true;
     this.resumeService.getUserResumes().subscribe(
-      resumes => {
+      (resumes: Resume[]) => {
         this.userResumes = resumes;
         this.isLoading = false;
       },
-      error => {
+      (error: any) => {
         console.error('Error loading resumes:', error);
         this.isLoading = false;
       }
@@ -86,14 +86,14 @@ export class DashboardComponent implements OnInit {
       // Upload the file
       this.isProcessing = true;
       this.resumeService.uploadResume(file).subscribe(
-        resume => {
+        (resume: any) => {
           this.userResumes.push(resume);
           this.isProcessing = false;
           this.selectedFile = null;
           // Optionally navigate to edit
           this.router.navigate([`/resume/${resume.id}/edit`]);
         },
-        error => {
+        (error: any) => {
           console.error('Upload error:', error);
           this.uploadError = error?.error?.message || 'Failed to upload resume';
           this.isProcessing = false;
@@ -113,12 +113,12 @@ export class DashboardComponent implements OnInit {
 
     this.isProcessing = true;
     this.resumeService.performAtsCheck(resumeId).subscribe(
-      result => {
+      (result: any) => {
         console.log('ATS Check result:', result);
         // Show ATS check modal/result
         this.isProcessing = false;
       },
-      error => {
+      (error: any) => {
         console.error('ATS Check error:', error);
         this.isProcessing = false;
       }
@@ -157,7 +157,7 @@ export class DashboardComponent implements OnInit {
         () => {
           this.userResumes = this.userResumes.filter(r => r.id !== resumeId);
         },
-        error => {
+        (error: any) => {
           console.error('Delete error:', error);
         }
       );
