@@ -1,0 +1,131 @@
+<div class="profile-container">
+
+  <!-- BACK BUTTON -->
+  <button class="back-btn" (click)="goToDashboard()">
+    ← Back to Dashboard
+  </button>
+
+  <div class="profile-card">
+
+    <!-- HEADER -->
+    <div class="profile-header">
+      <div class="avatar-circle">
+        {{ profileForm.value.fullName?.charAt(0) || 'U' }}
+      </div>
+      <h2>Account Settings</h2>
+      <p class="subtitle">Manage your personal information and subscription</p>
+    </div>
+
+    <!-- ========================= -->
+    <!-- PROFILE FORM -->
+    <!-- ========================= -->
+    <form *ngIf="!showOtpBox" [formGroup]="profileForm" (ngSubmit)="updateProfile()">
+
+      <div class="info-grid">
+
+        <div class="input-group">
+          <label>Full Name</label>
+          <input type="text"
+                 formControlName="fullName"
+                 [readonly]="!isEditing"
+                 [class.editable]="isEditing">
+        </div>
+
+        <div class="input-group">
+          <label>Email Address</label>
+          <input type="email"
+                 formControlName="email"
+                 [readonly]="!isEditing"
+                 [class.editable]="isEditing">
+        </div>
+
+        <div class="input-group">
+          <label>Phone Number</label>
+          <input type="text"
+                 formControlName="phone"
+                 [readonly]="!isEditing"
+                 [class.editable]="isEditing">
+        </div>
+
+        <div class="input-group">
+          <label>Plan Type</label>
+          <div class="plan-badge"
+               [attr.data-plan]="(userService.userPlan$ | async)">
+            {{ (userService.userPlan$ | async) | uppercase }}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MESSAGE -->
+      <div *ngIf="message" [className]="'alert ' + message.type">
+        {{ message.text }}
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="actions">
+        <button type="button"
+                *ngIf="!isEditing"
+                class="btn-secondary"
+                (click)="toggleEdit()">
+          Edit Profile
+        </button>
+
+        <button type="button"
+                *ngIf="isEditing"
+                class="btn-ghost"
+                (click)="toggleEdit()"
+                [disabled]="isLoading">
+          Cancel
+        </button>
+
+        <button type="submit"
+                *ngIf="isEditing"
+                class="btn-primary"
+                [disabled]="isLoading">
+          {{ isLoading ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+
+    </form>
+
+    <!-- ========================= -->
+    <!-- OTP VERIFICATION UI -->
+    <!-- ========================= -->
+    <div *ngIf="showOtpBox" class="otp-section">
+
+      <h3>Verify Your New Email</h3>
+      <p class="otp-subtext">
+        We sent a 6-digit code to your new email. Enter it below.
+      </p>
+
+      <div class="otp-input-group">
+        <input type="text"
+               maxlength="6"
+               [(ngModel)]="otpCode"
+               placeholder="Enter OTP"
+               class="otp-input">
+      </div>
+
+      <div *ngIf="message" [className]="'alert ' + message.type">
+        {{ message.text }}
+      </div>
+
+      <div class="otp-actions">
+        <button class="btn-primary"
+                (click)="verifyOtp()"
+                [disabled]="isLoading">
+          {{ isLoading ? 'Verifying...' : 'Verify OTP' }}
+        </button>
+
+        <button class="btn-ghost"
+                (click)="cancelOtp()"
+                [disabled]="isLoading">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

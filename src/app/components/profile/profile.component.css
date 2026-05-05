@@ -1,0 +1,263 @@
+/* ========================= */
+/* CONTAINER */
+/* ========================= */
+.profile-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f6f8fb;
+  padding: 20px;
+  position: relative;
+}
+
+/* ========================= */
+/* BACK BUTTON */
+/* ========================= */
+.back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333;
+  font-weight: 500;
+}
+
+.back-btn:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  transform: translateY(-1px);
+}
+
+/* ========================= */
+/* CARD */
+/* ========================= */
+.profile-card {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
+}
+
+/* ========================= */
+/* HEADER */
+/* ========================= */
+.profile-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.avatar-circle {
+  width: 75px;
+  height: 75px;
+  background: linear-gradient(135deg, #007bff, #5aa8ff);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0 auto 15px;
+}
+
+h2 {
+  color: #1a1a1a;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #777;
+  font-size: 0.9rem;
+}
+
+/* ========================= */
+/* FORM */
+/* ========================= */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid transparent;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #333;
+  transition: all 0.25s ease;
+}
+
+.input-group input.editable {
+  border-color: #e5e7eb;
+  background: white;
+}
+
+.input-group input.editable:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
+}
+
+/* ========================= */
+/* PLAN BADGE */
+/* ========================= */
+.plan-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #111827;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* ========================= */
+/* ACTION BUTTONS */
+/* ========================= */
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  border-top: 1px solid #eee;
+  padding-top: 20px;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.btn-primary:hover {
+  background: #0066d6;
+}
+
+.btn-secondary {
+  background: #111827;
+  color: white;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #666;
+  border: none;
+  cursor: pointer;
+}
+
+/* ========================= */
+/* ALERT */
+/* ========================= */
+.alert {
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.alert.success {
+  color: #22c55e;
+}
+
+.alert.error {
+  color: #ef4444;
+}
+
+/* ========================= */
+/* OTP SECTION */
+/* ========================= */
+.otp-section {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.otp-section h3 {
+  margin-bottom: 8px;
+  color: #111;
+}
+
+.otp-subtext {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+/* OTP INPUT */
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.otp-input {
+  width: 200px;
+  padding: 14px;
+  font-size: 1.3rem;
+  text-align: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  letter-spacing: 6px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.otp-input:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+/* OTP BUTTONS */
+.otp-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* ========================= */
+/* RESPONSIVE */
+/* ========================= */
+@media (max-width: 600px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    padding: 25px;
+  }
+
+  .back-btn {
+    top: 10px;
+    left: 10px;
+  }
+}
