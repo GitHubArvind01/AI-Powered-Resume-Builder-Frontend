@@ -1,236 +1,412 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import { ResumeService } from '../../services/resume.service';
-import { TemplateDataService } from '../../services/template-data.service';
-import { AuthStateService } from '../../services/auth-state.service';
+import { AiService } from '../../services/ai.service';
+import { ExportService } from '../../services/export.service';
+import { UserService } from '../../services/user.service';
+import { Resume, UserPlan, Template } from '../../models/template.model';
 import { AtsCheckerComponent } from '../ats-checker/ats-checker.component';
-import { Resume, Template } from '../../models/template.model';
-import { Subscription } from 'rxjs';
+import { trigger, transition, style, animate } from '@angular/animations';
 
-declare var html2pdf: any;
+interface EditorSection {
+  id: string;
+  label: string;
+  icon: string;
+  expanded: boolean;
+}
 
 @Component({
   selector: 'app-resume-editor',
   standalone: true,
-  imports: [CommonModule, AtsCheckerComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AtsCheckerComponent],
   templateUrl: './resume-editor.component.html',
-  styleUrls: ['./resume-editor.component.css']
+  styleUrls: ['./resume-editor.component.css'],
+  animations: [
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ]),
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ transform: 'translateX(-20px)', opacity: 0 }),
+        animate('300ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))
+      ])
+    ])
+  ]
 })
 export class ResumeEditorComponent implements OnInit, OnDestroy {
+  private resumeService = inject(ResumeService);
+  private aiService = inject(AiService);
+  private exportService = inject(ExportService);
+  private userService = inject(UserService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private resumeService = inject(ResumeService);
-  private templateDataService = inject(TemplateDataService);
-  private authState = inject(AuthStateService);
-  private sanitizer = inject(DomSanitizer);
+  private fb = inject(FormBuilder);
 
-  resume: any = null;
-  templateId: string = '';
-  isLoading = true;
+  @ViewChild('previewContainer') previewContainer: ElementRef | undefined;
+
+  // ── Lifecycle subjects (Task 3: debounce + cleanup) ──────────────────────
+  private destroy$ = new Subject<void>();
+  private autoSaveSubject = new Subject<void>();
+  private saveInProgress = false;
+
+  resume: Resume | null = null;
+  resumeForm: FormGroup = this.fb.group({});
+  isLoading = false;
   isSaving = false;
   isExporting = false;
-  showAtsDrawer = false;
-  safeHtmlContent: SafeHtml = '';
+  isCheckingAts = false;
+  aiLoadingField: string | null = null;
+  showAiModal = false;
+  userPlan: UserPlan = UserPlan.FREE;
+  aiRemaining = 0;
+  aiError: string | null = null;
+  exportError: string | null = null;
 
-  private subscriptions = new Subscription();
+  // ── Task 4: ATS drawer state ──────────────────────────────────────────────
+  showAtsDrawer = false;
+  sections: EditorSection[] = [
+    { id: 'personal', label: 'Personal Info', icon: '👤', expanded: true },
+    { id: 'summary', label: 'Summary', icon: '📝', expanded: false },
+    { id: 'experience', label: 'Experience', icon: '💼', expanded: false },
+    { id: 'education', label: 'Education', icon: '🎓', expanded: false },
+    { id: 'skills', label: 'Skills', icon: '⭐', expanded: false }
+  ];
+  templates: Template[] = [];
 
   ngOnInit(): void {
-    this.subscriptions.add(
-      this.route.params.subscribe((params: any) => {
-        this.templateId = params['templateId'];
-        const resumeId = params['id'];
+    // Task 3: Wire debounced auto-save once at the component level
+    this.autoSaveSubject
+      .pipe(debounceTime(1500), takeUntil(this.destroy$))
+      .subscribe(() => this.doAutoSave());
 
-        if (resumeId) {
-          this.loadResume(resumeId);
-        } else if (this.templateId) {
-          this.initializeNewResume(this.templateId);
-        } else {
-          this.router.navigate(['/templates']);
-        }
-      })
-    );
+    this.loadUserPlan();
+    this.loadResume();
   }
 
   ngOnDestroy(): void {
-    this.subscriptions.unsubscribe();
+    // Task 3: Clean up all subscriptions to prevent ghost saves
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
-  loadResume(id: string): void {
+  loadUserPlan(): void {
+    this.userService.userPlan$.pipe(takeUntil(this.destroy$)).subscribe(plan => {
+      this.userPlan = plan;
+      this.aiRemaining = this.aiService.getRemainingImprovements();
+    });
+  }
+
+  loadResume(): void {
+    const resumeId = this.route.snapshot.paramMap.get('id');
+    if (!resumeId) {
+      this.initializeNewResume();
+      return;
+    }
+
     this.isLoading = true;
-    this.resumeService.getResumeById(id).subscribe({
-      next: (resume: Resume) => {
+    this.resumeService.getResumeById(resumeId).subscribe(
+      resume => {
         this.resume = resume;
-        this.templateId = resume.templateId;
-        const content = typeof resume.content === 'string' ? JSON.parse(resume.content) : resume.content;
-        this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(content.htmlContent || '');
+        this.initializeForm();
         this.isLoading = false;
       },
-      error: (err: any) => {
-        console.error('Error loading resume:', err);
+      error => {
+        console.error('Error loading resume:', error);
+        this.isLoading = false;
         this.router.navigate(['/dashboard']);
       }
-    });
+    );
   }
 
-  initializeNewResume(templateId: string): void {
-    this.isLoading = true;
-    this.templateDataService.getTemplateById(templateId).subscribe({
-      // FIX: Changed to Template | undefined
-      next: (template: Template | undefined) => {
-        if (!template) {
-          // If no template is found, redirect back
-          this.router.navigate(['/templates']);
-          return;
-        }
+  initializeNewResume(): void {
+    const templateId = this.route.snapshot.queryParamMap.get('templateId') || 'professional';
 
-        this.resume = { title: 'Untitled Resume', templateId };
-        const dummyHtml = this.getTemplateHtml(templateId);
-        this.safeHtmlContent = this.sanitizer.bypassSecurityTrustHtml(dummyHtml);
-        this.isLoading = false;
-      },
-      error: () => {
-        this.router.navigate(['/templates']);
-      }
-    });
-  }
+    // Task 2: Read previewData from Angular router navigation state
+    const previewData = window.history.state?.previewData ?? null;
 
-  saveResume(): void {
-    const editorElement = document.querySelector('.resume-content-editable');
-    if (!editorElement) return;
-
-    this.isSaving = true;
-    const htmlContent = editorElement.innerHTML;
-
-    this.resumeService.saveResumeContent(this.templateId, htmlContent).subscribe({
-      next: (savedResume: Resume) => {
-        this.resume = savedResume;
-        this.isSaving = false;
-        if (!this.route.snapshot.params['id']) {
-          this.router.navigate(['/resume', savedResume.id, 'edit'], { replaceUrl: true });
-        }
-      },
-      error: (err: any) => {
-        console.error('Error saving resume:', err);
-        this.isSaving = false;
-      }
-    });
-  }
-
-  exportToPdf(): void {
-    const element = document.getElementById('resume-editor-page');
-    if (!element) return;
-
-    this.isExporting = true;
-    const opt = {
-      margin: 0,
-      filename: `${this.resume?.title || 'resume'}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    if (typeof html2pdf !== 'undefined') {
-      html2pdf().from(element).set(opt).save().then(() => {
-        this.isExporting = false;
-      }).catch((err: any) => {
-        console.error('PDF Export Error:', err);
-        this.isExporting = false;
-      });
+    if (previewData) {
+      // Pre-populate the editor with the template's placeholder data
+      this.resume = {
+        id: 'new-' + Date.now(),
+        title: 'My Resume',
+        templateId,
+        content: { ...previewData, templateId },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
     } else {
-      console.error('html2pdf is not loaded');
-      this.isExporting = false;
-      window.print();
+      this.resume = {
+        id: 'new-' + Date.now(),
+        title: 'My Resume',
+        templateId,
+        content: {
+          templateId,
+          personalInfo: { fullName: '', email: '', phone: '', location: '' },
+          summary: '',
+          experience: [],
+          education: [],
+          skills: []
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+
+    this.initializeForm();
+  }
+
+  initializeForm(): void {
+    if (!this.resume) return;
+
+    const content = this.resume.content;
+    this.resumeForm = this.fb.group({
+      title: [this.resume.title, Validators.required],
+      templateId: [this.resume.templateId],
+      personalInfo: this.fb.group({
+        fullName: [content.personalInfo?.fullName || '', Validators.required],
+        email: [content.personalInfo?.email || '', [Validators.required, Validators.email]],
+        phone: [content.personalInfo?.phone || ''],
+        location: [content.personalInfo?.location || '']
+      }),
+      summary: [content.summary || ''],
+      experience: this.fb.array(content.experience?.map((exp: any) =>
+        this.createExperienceGroup(exp)) || []),
+      education: this.fb.array(content.education?.map((edu: any) =>
+        this.createEducationGroup(edu)) || []),
+      skills: this.fb.array(content.skills?.map((skill: any) =>
+        this.fb.group({ skill: [typeof skill === 'string' ? skill : (skill?.skill || '')] })) || [])
+    });
+
+    // Task 3: Emit to the debounced Subject instead of calling autoSave directly
+    this.resumeForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.autoSaveSubject.next());
+  }
+
+  createExperienceGroup(exp?: any) {
+    return this.fb.group({
+      jobTitle: [exp?.jobTitle || ''],
+      companyName: [exp?.companyName || ''],
+      startDate: [exp?.startDate || ''],
+      endDate: [exp?.endDate || ''],
+      responsibilities: [exp?.responsibilities?.join?.('\n') ?? (exp?.responsibilities || '')]
+    });
+  }
+
+  createEducationGroup(edu?: any) {
+    return this.fb.group({
+      degree: [edu?.degree || ''],
+      school: [edu?.school || ''],
+      graduationDate: [edu?.graduationDate || '']
+    });
+  }
+
+  addExperience(): void {
+    const control = this.resumeForm.get('experience') as any;
+    control.push(this.createExperienceGroup());
+  }
+
+  removeExperience(index: number): void {
+    const control = this.resumeForm.get('experience') as any;
+    control.removeAt(index);
+  }
+
+  addEducation(): void {
+    const control = this.resumeForm.get('education') as any;
+    control.push(this.createEducationGroup());
+  }
+
+  removeEducation(index: number): void {
+    const control = this.resumeForm.get('education') as any;
+    control.removeAt(index);
+  }
+
+  addSkill(): void {
+    const control = this.resumeForm.get('skills') as any;
+    control.push(this.fb.group({ skill: [''] }));
+  }
+
+  removeSkill(index: number): void {
+    const control = this.resumeForm.get('skills') as any;
+    control.removeAt(index);
+  }
+
+  /** Task 3: Called by debounced Subject — the actual HTTP save logic */
+  private doAutoSave(): void {
+    if (this.resumeForm.invalid || this.saveInProgress) return;
+
+    this.saveInProgress = true;
+    this.isSaving = true;
+    const content = { ...this.resumeForm.value };
+
+    // Convert responsibilities text to array
+    if (content.experience) {
+      content.experience = content.experience.map((exp: any) => ({
+        ...exp,
+        responsibilities: exp.responsibilities
+          ? exp.responsibilities.split('\n').filter((r: string) => r.trim())
+          : []
+      }));
+    }
+
+    if (this.resume?.id.startsWith('new-')) {
+      // Task 3: Guard the ID before navigating to prevent double-creation
+      const tempId = this.resume.id;
+      this.resumeService.createResume({
+        title: content.title,
+        templateId: content.templateId,
+        content
+      }).pipe(takeUntil(this.destroy$)).subscribe(
+        created => {
+          // Only navigate if the resume hasn't already been created by a concurrent call
+          if (this.resume?.id === tempId) {
+            this.resume = created;
+            this.isSaving = false;
+            this.saveInProgress = false;
+            this.router.navigate(['/resume', created.id, 'edit'], { replaceUrl: true });
+          } else {
+            this.isSaving = false;
+            this.saveInProgress = false;
+          }
+        },
+        error => {
+          console.error('Error creating resume:', error);
+          this.isSaving = false;
+          this.saveInProgress = false;
+        }
+      );
+    } else if (this.resume) {
+      this.resumeService.updateResume(this.resume.id, content)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(
+          () => {
+            this.isSaving = false;
+            this.saveInProgress = false;
+          },
+          error => {
+            console.error('Error updating resume:', error);
+            this.isSaving = false;
+            this.saveInProgress = false;
+          }
+        );
+    } else {
+      this.isSaving = false;
+      this.saveInProgress = false;
     }
   }
 
-  goBack(): void {
-    this.router.navigate(['/templates']);
+  // Public autoSave kept for the "Save" button — immediately emits to the Subject
+  autoSave(): void {
+    this.autoSaveSubject.next();
   }
 
-  private getTemplateHtml(templateId: string): string {
-    const baseStyle = `
-      <style>
-        .t-container { font-family: 'Arial', sans-serif; color: #333; line-height: 1.5; }
-        .t-header { border-bottom: 2px solid #444; margin-bottom: 20px; padding-bottom: 10px; }
-        .t-name { font-size: 28px; font-weight: bold; margin: 0; color: #000; }
-        .t-contact { font-size: 14px; color: #666; margin-top: 5px; }
-        .t-section { margin-bottom: 20px; }
-        .t-section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #ddd; margin-bottom: 10px; text-transform: uppercase; color: #444; }
-        .t-item { margin-bottom: 15px; }
-        .t-item-header { display: flex; justify-content: space-between; font-weight: bold; }
-        .t-desc { font-size: 14px; margin-top: 5px; }
-        ul.t-desc { padding-left: 20px; }
-      </style>
-    `;
+  improveContent(field: string): void {
+    if (this.aiLoadingField) {
+      return;
+    }
 
-    const content = `
-      <div class="t-container">
-        <header class="t-header">
-          <h1 class="t-name" contenteditable="true">JOHN DOE</h1>
-          <div class="t-contact" contenteditable="true">
-            New York, NY | (555) 123-4567 | john.doe@example.com | linkedin.com/in/johndoe
-          </div>
-        </header>
+    if (!this.aiService.canUseAiFeatures()) {
+      alert(`You've reached your daily limit. Upgrade to Pro for unlimited improvements!`);
+      return;
+    }
 
-        <section class="t-section">
-          <div class="t-section-title">Professional Summary</div>
-          <div class="t-desc" contenteditable="true">
-            Results-driven Software Engineer with 5+ years of experience in building scalable web applications.
-            Proficient in Angular, Spring Boot, and Cloud technologies. Proven track record of delivering high-quality code and improving system performance.
-          </div>
-        </section>
+    const content = this.resumeForm.get(field)?.value;
+    if (!content) return;
 
-        <section class="t-section">
-          <div class="t-section-title">Experience</div>
-          <div class="t-item">
-            <div class="t-item-header">
-              <span contenteditable="true">Senior Software Engineer</span>
-              <span contenteditable="true">Jan 2020 - Present</span>
-            </div>
-            <div contenteditable="true"><em>Tech Solutions Inc., New York</em></div>
-            <ul class="t-desc" contenteditable="true">
-              <li>Led a team of 5 developers to migrate legacy monolith to microservices using Spring Boot and Kafka.</li>
-              <li>Improved application performance by 40% through optimized SQL queries and caching strategies.</li>
-              <li>Implemented CI/CD pipelines reducing deployment time by 50%.</li>
-            </ul>
-          </div>
-          <div class="t-item">
-            <div class="t-item-header">
-              <span contenteditable="true">Full Stack Developer</span>
-              <span contenteditable="true">Jun 2016 - Dec 2019</span>
-            </div>
-            <div contenteditable="true"><em>Web Innovations Ltd., Boston</em></div>
-            <ul class="t-desc" contenteditable="true">
-              <li>Developed and maintained responsive web applications using Angular and Node.js.</li>
-              <li>Collaborated with designers to create intuitive UI/UX for 10+ client projects.</li>
-            </ul>
-          </div>
-        </section>
+    this.showAiModal = true;
+    this.aiError = null;
+    this.aiLoadingField = field;
+    this.aiService.improveContent({ text: content, type: this.resolveAiType(field), resumeId: this.resume?.id })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        result => {
+          this.resumeForm.patchValue({ [field]: result.improvedText });
+          this.aiService.incrementUsage();
+          this.aiRemaining = this.aiService.getRemainingImprovements();
+          this.showAiModal = false;
+          this.aiLoadingField = null;
+        },
+        error => {
+          console.error('AI error:', error);
+          this.aiError = error?.error?.message || 'AI enhancement failed. Please try again.';
+          this.showAiModal = false;
+          this.aiLoadingField = null;
+        }
+      );
+  }
 
-        <section class="t-section">
-          <div class="t-section-title">Education</div>
-          <div class="t-item">
-            <div class="t-item-header">
-              <span contenteditable="true">B.S. in Computer Science</span>
-              <span contenteditaG93QXRzRHJhd2VyID0gZmFsc2VcIj5cbjwvYXBwLWF0cy1jaGVja2VyPlxuIl19able="true">2016</span>
-            </div>
-            <div contenteditable="true">University of Technology, GPA: 3.8/4.0</div>
-          </div>
-        </section>
+  /** Task 2/4: export as pdf calling service */
+  exportResume(format: 'pdf' | 'docx' | 'txt'): void {
+    if (!this.resume) return;
 
-        <section class="t-section">
-          <div class="t-section-title">Skills</div>
-          <div class="t-desc" contenteditable="true">
-            <strong>Languages:</strong> Java, TypeScript, JavaScript, SQL, HTML5, CSS3<br>
-            <strong>Frameworks:</strong> Spring Boot, Angular, React, Express.js<br>
-            <strong>Tools:</strong> AWS, Docker, Kubernetes, Git, Jenkins, Jira
-          </div>
-        </section>
-      </div>
-    `;
+    if (format !== 'pdf') {
+      this.exportError = 'Only PDF export is available right now.';
+      return;
+    }
 
-    return baseStyle + content;
+    this.isExporting = true;
+    this.exportError = null;
+    this.exportService.exportAsPdf(this.resume.id).subscribe(
+      blob => {
+        const fileName = this.exportService.generateFileName(this.resume!.title, 'pdf');
+        this.exportService.downloadFile(blob, fileName);
+        this.isExporting = false;
+      },
+      error => {
+        console.error('Export error:', error);
+        this.exportError = error?.error?.message || 'PDF export failed. Please try again.';
+        this.isExporting = false;
+      }
+    );
+  }
+
+  /** Task 4: Opens the ATS drawer instead of alert() */
+  performAtsCheck(): void {
+    if (!this.resume) return;
+    this.showAtsDrawer = true;
+  }
+
+  toggleSection(sectionId: string): void {
+    const section = this.sections.find(s => s.id === sectionId);
+    if (section) {
+      section.expanded = !section.expanded;
+    }
+  }
+
+  saveResume(): void {
+    this.autoSave();
+  }
+
+  goBack(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  get experienceArray() {
+    return this.resumeForm.get('experience') as any;
+  }
+
+  get educationArray() {
+    return this.resumeForm.get('education') as any;
+  }
+
+  get skillsArray() {
+    return this.resumeForm.get('skills') as any;
+  }
+
+  isAiLoading(field: string): boolean {
+    return this.aiLoadingField === field;
+  }
+  private resolveAiType(field: string): 'summary' | 'bullets' | 'skills' | 'general' {
+    if (field === 'summary') return 'summary';
+    if (field.includes('responsibilities')) return 'bullets';
+    if (field.startsWith('skills')) return 'skills';
+    return 'general';
   }
 }

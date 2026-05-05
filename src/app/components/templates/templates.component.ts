@@ -109,7 +109,7 @@ export class TemplatesComponent implements OnInit {
     }
 
     this.selectingTemplateId = template.id;
-    this.router.navigate(['/editor', template.id]);
+    this.router.navigate(['/resume-preview', template.id]);
   }
 
   closeUpgradeModal(): void {
