@@ -98,20 +98,25 @@ export class TemplatesComponent implements OnInit {
   }
 
   selectTemplate(template: Template): void {
-    if (this.selectingTemplateId) {
-      return;
-    }
-
-    this.selectedTemplate = template;
+    // Check premium status first
     if (template.isPremium && this.currentUserPlan === UserPlan.FREE) {
+      this.selectedTemplate = template;
       this.showUpgradeModal = true;
       return;
     }
 
+    // Set the ID for any UI loading indicators
     this.selectingTemplateId = template.id;
-    this.router.navigate(['/resume-preview', template.id]);
-  }
 
+    // Navigate to the preview page
+    // We pass 'previewData' in state so the next component can load it immediately
+    this.router.navigate(['/resume-preview', template.id], {
+      state: {
+        templateId: template.id,
+        previewData: this.templates.find(t => t.id === template.id) // Pass the template object
+      }
+    });
+  }
   closeUpgradeModal(): void {
     this.showUpgradeModal = false;
     this.selectedTemplate = null;
