@@ -1,0 +1,66 @@
+<div class="preview-page">
+  <header class="preview-header">
+    <div>
+      <p class="preview-kicker">{{ resume.personalInfo.location || 'Premium Resume Preview' }}</p>
+      <h1>{{ resume.personalInfo.fullName || 'Your Name' }}</h1>
+      <p class="headline">{{ resume.personalInfo.headline || 'Professional headline' }}</p>
+    </div>
+    <div class="preview-meta">
+      <span>{{ resume.personalInfo.email || 'email@example.com' }}</span>
+      <span>{{ resume.personalInfo.phone || '+91 98765 43210' }}</span>
+    </div>
+  </header>
+
+  <section class="preview-section">
+    <h2>Summary</h2>
+    <p>{{ resume.summary || 'Use the builder on the left to craft a concise, ATS-friendly professional summary.' }}</p>
+  </section>
+
+  <section class="preview-section">
+    <h2>Experience</h2>
+    <article class="preview-item" *ngFor="let item of resume.experience">
+      <div class="item-header">
+        <div>
+          <h3>{{ item.role || 'Role Title' }}</h3>
+          <p>{{ item.company || 'Company Name' }}</p>
+        </div>
+        <span>{{ item.duration || 'Timeline' }}</span>
+      </div>
+      <ul>
+        <li *ngFor="let highlight of item.highlights">
+          {{ highlight || 'Add measurable accomplishments to strengthen this role.' }}
+        </li>
+      </ul>
+    </article>
+  </section>
+
+  <div class="preview-grid">
+    <section class="preview-section">
+      <h2>Education</h2>
+      <article class="preview-item compact" *ngFor="let item of resume.education">
+        <h3>{{ item.degree || 'Degree / Course' }}</h3>
+        <p>{{ item.institution || 'Institution Name' }}</p>
+        <span>{{ item.year || 'Year' }}</span>
+      </article>
+    </section>
+
+    <section class="preview-section">
+      <h2>Skills</h2>
+      <div class="skills-list">
+        <span *ngFor="let skill of visibleSkills()" class="skill-chip">{{ skill }}</span>
+        <span *ngIf="!visibleSkills().length" class="skill-chip muted">Add skills to preview them</span>
+      </div>
+    </section>
+  </div>
+
+  <section class="preview-section">
+    <h2>Projects</h2>
+    <article class="preview-item compact" *ngFor="let project of resume.projects">
+      <div class="item-header">
+        <h3>{{ project.name || 'Project Name' }}</h3>
+        <a *ngIf="project.link" [href]="project.link" target="_blank" rel="noreferrer">{{ project.link }}</a>
+      </div>
+      <p>{{ project.description || 'Highlight the problem, your approach, and the measurable result.' }}</p>
+    </article>
+  </section>
+</div>
