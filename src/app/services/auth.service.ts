@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { AuthResponse } from '../models/template.model';
+import {AuthResponse, UserProfile} from '../models/template.model';
 import { AuthStateService } from './auth-state.service';
 
 @Injectable({ providedIn: 'root' })
@@ -48,6 +48,28 @@ export class AuthService {
   verifyForgotOtp(email: string, otp: string): Observable<string> {
     const params = new HttpParams().set('email', email).set('otp', otp);
     return this.http.post(`${this.apiUrl}/forgot-password/verify`, {}, { params, responseType: 'text' });
+  }
+
+  updateProfile(email: string, data: any): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/update-profile/${email}`, data).pipe(
+      tap((res) => {
+        this.authState.setSession(res); // NEW TOKEN SET
+        this.authState.refreshCurrentUser().subscribe();
+      })
+    );
+  }
+
+  verifyEmailUpdate(email: string, otp: string): Observable<AuthResponse> {
+    const params = new HttpParams()
+      .set('currentEmail', email)
+      .set('otp', otp);
+
+    return this.http.post<AuthResponse>(`${this.apiUrl}/verify-email-update`, {}, { params }).pipe(
+      tap((res) => {
+        this.authState.setSession(res); // NEW TOKEN
+        this.authState.refreshCurrentUser().subscribe();
+      })
+    );
   }
 
   resetPassword(email: string, newPassword: string): Observable<string> {

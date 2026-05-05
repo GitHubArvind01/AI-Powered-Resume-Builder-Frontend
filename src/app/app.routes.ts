@@ -30,14 +30,14 @@ export const routes: Routes = [
     loadComponent: () => import('./components/payment-failed/payment-failed.component').then((m) => m.PaymentFailedComponent)
   },
   {
-    path: 'resume-builder',
-    canActivate: [authGuard],
-    loadComponent: () => import('./components/resume-builder/resume-builder.component').then((m) => m.ResumeBuilderComponent)
-  },
-  {
     path: 'editor/:templateId',
     canActivate: [authGuard],
     loadComponent: () => import('./components/resume-editor/resume-editor.component').then((m) => m.ResumeEditorComponent)
+  },
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
   },
   { path: 'resume/create', component: ResumeEditorComponent, canActivate: [authGuard] },
   { path: 'resume/:id/edit', component: ResumeEditorComponent, canActivate: [authGuard] },
