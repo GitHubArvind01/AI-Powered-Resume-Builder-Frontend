@@ -1,33 +1,24 @@
-<!-- Dashboard Container -->
 <div class="dashboard-container">
-  <!-- Header -->
   <header class="dashboard-header">
     <div class="header-content">
       <div class="logo">
         <h1>ResumeAI</h1>
       </div>
 
-      <!-- Main Actions -->
       <div class="main-actions">
         <button class="action-btn create-btn" (click)="createResume()">
           <span class="btn-icon">+</span> Create Resume
         </button>
-        <button class="action-btn upload-btn" (click)="uploadResume()">
-          <span class="btn-icon">⬆️</span> Upload Resume
-        </button>
-        <button class="action-btn ats-btn" (click)="performAtsCheck('current')" [disabled]="isProcessing">
-          <span class="btn-icon">✓</span> ATS Check
+        <button class="action-btn ats-btn" (click)="focusAtsChecker()">
+          <span class="btn-icon">ATS</span> Check
         </button>
       </div>
 
-      <!-- Profile Dropdown -->
       <div class="profile-section">
         <button class="profile-btn" (click)="toggleProfileDropdown()">
-          <span class="profile-icon">👤</span>
           <span class="profile-name">{{ userProfile?.fullName || 'User' }}</span>
         </button>
 
-        <!-- Dropdown Menu -->
         <div *ngIf="showProfileDropdown" class="dropdown-menu">
           <div class="dropdown-header">
             <span>{{ userProfile?.email }}</span>
@@ -36,41 +27,29 @@
           </div>
 
           <div class="dropdown-items">
-            <button class="dropdown-item" (click)="viewProfile()">
-              👤 View Profile
-            </button>
-            <button *ngIf="isAdmin" class="dropdown-item" (click)="openAdminPanel()">
-              Admin Panel
-            </button>
-            <button
-              *ngIf="userPlan === 'free'"
-              class="dropdown-item upgrade-item"
-              (click)="upgradeProfile()">
-              ⭐ Upgrade to Pro
+            <button class="dropdown-item" (click)="viewProfile()">View Profile</button>
+            <button *ngIf="isAdmin" class="dropdown-item" (click)="openAdminPanel()">Admin Panel</button>
+            <button *ngIf="userPlan === 'free'" class="dropdown-item upgrade-item" (click)="upgradeProfile()">
+              Upgrade to Pro
             </button>
             <div class="dropdown-divider"></div>
-            <button class="dropdown-item logout-item" (click)="logout()">
-              🚪 Logout
-            </button>
+            <button class="dropdown-item logout-item" (click)="logout()">Logout</button>
           </div>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
   <main class="dashboard-main">
-    <!-- Welcome Section -->
     <section class="welcome-section">
-      <h2>Welcome back, {{ userProfile?.fullName || 'User' }}! 👋</h2>
+      <h2>Welcome back, {{ userProfile?.fullName || 'User' }}!</h2>
       <p>
         <span *ngIf="userPlan === 'free'">You're on the <strong>Free Plan</strong>. <a routerLink="/payment">Upgrade to Pro</a> to unlock premium templates.</span>
-        <span *ngIf="userPlan === 'pro'">You're on the <strong>Pro Plan</strong>. Enjoy all premium features! ⭐</span>
+        <span *ngIf="userPlan === 'pro'">You're on the <strong>Pro Plan</strong>. Enjoy all premium features.</span>
       </p>
       <button *ngIf="isAdmin" class="action-btn ats-btn" (click)="openAdminPanel()">Open Admin Panel</button>
     </section>
 
-    <!-- Quick Stats -->
     <section class="quick-stats">
       <div class="stat-card">
         <div class="stat-icon">📄</div>
@@ -95,20 +74,84 @@
       </div>
     </section>
 
-    <!-- Recent Resumes Section -->
+    <section id="ats-checker-card" class="ats-section">
+      <div class="ats-copy">
+        <p class="section-tag">Premium ATS Checker</p>
+        <h3>Upload a resume and get an AI ATS score</h3>
+        <p>Upload your resume in PDF or Word format (.pdf, .doc, .docx) to get an instant ATS score with actionable keyword suggestions.</p>
+        <div class="usage-inline">
+          <span>AI assists left</span>
+          <strong>{{ aiRemainingUsage }}</strong>
+        </div>
+      </div>
+
+      <div class="ats-actions">
+        <input type="file" accept=".pdf,.doc,.docx" (change)="onFileSelected($event)" />
+        <button class="action-btn ats-btn" (click)="uploadResume()" [disabled]="isProcessing || !selectedFile">
+          Check ATS
+        </button>
+      </div>
+
+      <div *ngIf="selectedFile && !isProcessing" class="selected-file">
+        Selected file: <strong>{{ selectedFile.name }}</strong>
+      </div>
+
+      <div *ngIf="isProcessing" class="ats-loading">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-line long"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+
+      <div *ngIf="atsResult" class="ats-result">
+        <div class="score-band">
+          <div class="score-ring" [style.--score]="atsResult.score">
+            <strong>{{ atsResult.score }}%</strong>
+            <span>ATS Score</span>
+          </div>
+          <div class="score-copy">
+            <h3>Keyword match: {{ atsResult.keywordMatchPercentage || atsResult.score }}%</h3>
+            <p>Matched {{ atsResult.matchedKeywords?.length || 0 }} keywords and flagged {{ atsResult.missingKeywords?.length || 0 }} gaps.</p>
+          </div>
+        </div>
+        <div class="keyword-panels">
+          <div>
+            <h4>Suggestions</h4>
+            <ul>
+              <li *ngFor="let tip of atsResult.suggestions">{{ tip }}</li>
+            </ul>
+          </div>
+          <div *ngIf="atsResult.matchedKeywords?.length">
+            <h4>Matched Keywords</h4>
+            <div class="keyword-list">
+              <span *ngFor="let keyword of atsResult.matchedKeywords">{{ keyword }}</span>
+            </div>
+          </div>
+          <div *ngIf="atsResult.missingKeywords?.length">
+            <h4>Missing Keywords</h4>
+            <div class="keyword-list warning">
+              <span *ngFor="let keyword of atsResult.missingKeywords">{{ keyword }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="upgrade-inline" *ngIf="userPlan === 'free' && aiRemainingUsage === 0">
+          <span>Free AI limit reached.</span>
+          <button class="btn-upgrade" (click)="upgradeProfile()">Upgrade</button>
+        </div>
+      </div>
+    </section>
+
     <section class="resumes-section">
       <div class="section-header">
         <h3>Your Resumes</h3>
         <p *ngIf="userResumes.length === 0" class="empty-message">No resumes yet. Create one to get started!</p>
       </div>
 
-      <!-- Loading State -->
       <div *ngIf="isLoading" class="loading-state">
         <div class="spinner"></div>
         <p>Loading your resumes...</p>
       </div>
 
-      <!-- Resumes Grid -->
       <div *ngIf="!isLoading && userResumes.length > 0" class="resumes-grid">
         <div *ngFor="let resume of userResumes" class="resume-card">
           <div class="resume-preview">
@@ -125,61 +168,38 @@
           </div>
 
           <div class="resume-actions">
-            <button class="action-small edit-btn" (click)="editResume(resume.id)" title="Edit">
-              ✏️
-            </button>
-            <button class="action-small check-btn" (click)="performAtsCheck(resume.id)" title="ATS Check">
-              ✓
-            </button>
-            <button class="action-small download-btn" (click)="downloadResume(resume.id)" title="Download">
-              ⬇️
-            </button>
-            <button class="action-small delete-btn" (click)="deleteResume(resume.id)" title="Delete">
-              🗑️
-            </button>
+            <button class="action-small edit-btn" (click)="editResume(resume.id)" title="Edit">Edit</button>
+            <button class="action-small check-btn" (click)="performAtsCheck(resume.id)" title="ATS Check">ATS</button>
+            <button class="action-small download-btn" (click)="downloadResume(resume.id)" title="Download">Open</button>
+            <button class="action-small delete-btn" (click)="deleteResume(resume.id)" title="Delete">Delete</button>
           </div>
         </div>
       </div>
 
-      <!-- Empty State -->
       <div *ngIf="!isLoading && userResumes.length === 0" class="empty-state">
-        <div class="empty-icon">📄</div>
+        <div class="empty-icon">Resumes</div>
         <h4>No resumes yet</h4>
-        <p>Create a new resume or upload an existing one to get started</p>
+        <p>Create a new resume to get started in builder mode.</p>
         <button class="btn-primary" (click)="createResume()">Create Your First Resume</button>
       </div>
     </section>
 
-    <!-- Templates Section (always visible) -->
     <section class="templates-section">
       <app-templates [showTitle]="true" [maxTemplates]="10"></app-templates>
     </section>
 
-    <!-- Upgrade CTA (for free users) -->
     <section *ngIf="userPlan === 'free'" class="upgrade-cta">
       <div class="upgrade-content">
-        <div class="upgrade-icon">⭐</div>
+        <div class="upgrade-icon">Pro</div>
         <h3>Ready to unlock premium features?</h3>
-        <p>Upgrade to ResumeAI Pro and access all 30+ templates, ATS optimization, and more!</p>
-        <button class="btn-upgrade" (click)="upgradeProfile()">
-          Upgrade to Pro
-        </button>
+        <p>Upgrade to ResumeAI Pro and access all templates, ATS optimization, and more.</p>
+        <button class="btn-upgrade" (click)="upgradeProfile()">Upgrade to Pro</button>
       </div>
     </section>
   </main>
 
-  <!-- Hidden file input for upload -->
-  <input
-    #fileInput
-    type="file"
-    id="fileInput"
-    accept=".pdf,.doc,.docx"
-    style="display: none;"
-    (change)="onFileSelected($event)">
-
-  <!-- Upload Error Message -->
   <div *ngIf="uploadError" class="error-toast">
-    <span class="error-icon">⚠️</span>
+    <span class="error-icon">!</span>
     {{ uploadError }}
   </div>
 </div>
