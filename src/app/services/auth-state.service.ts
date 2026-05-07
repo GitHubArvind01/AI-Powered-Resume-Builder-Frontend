@@ -49,6 +49,13 @@ export class AuthStateService {
     localStorage.removeItem(this.tokenKey);
     localStorage.setItem(this.tokenKey, response.token);
     this.tokenSubject.next(response.token);
+    if (response.user) {
+      this.userSubject.next(response.user);
+    }
+  }
+
+  setAuthenticatedState(response: AuthResponse): void {
+    this.setSession(response);
   }
 
   refreshCurrentUser(): Observable<UserProfile> {
@@ -127,7 +134,7 @@ export class AuthStateService {
   }
 
   getSubscriptionPlan(): string {
-    return (this.decodeToken()?.subscriptionPlan ?? 'FREE').toUpperCase();
+    return (this.userSubject.value?.subscriptionPlan ?? this.decodeToken()?.subscriptionPlan ?? 'FREE').toUpperCase();
   }
 
   getCurrentPlan(): UserPlan {
@@ -135,6 +142,9 @@ export class AuthStateService {
   }
 
   isProUser(): boolean {
+    if (typeof this.userSubject.value?.premiumActive === 'boolean') {
+      return this.userSubject.value.premiumActive;
+    }
     return ['PRO', 'MONTHLY', 'YEARLY'].includes(this.getSubscriptionPlan());
   }
 

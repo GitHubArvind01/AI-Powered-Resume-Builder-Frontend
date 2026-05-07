@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { PaymentRequest, PaymentResponse } from '../models/template.model';
+import { PaymentRequest, PaymentResponse, PaymentVerificationResponse } from '../models/template.model';
 
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
@@ -31,8 +31,8 @@ export class PaymentService {
   }
 
   // Verify payment
-  verifyPayment(paymentId: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/verify/${paymentId}`);
+  verifyPayment(paymentId: string): Observable<PaymentVerificationResponse> {
+    return this.http.get<PaymentVerificationResponse>(`${this.apiUrl}/verify/${paymentId}`);
   }
 
   // Get payment history

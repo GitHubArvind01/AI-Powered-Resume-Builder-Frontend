@@ -93,7 +93,8 @@ export class PaymentComponent implements OnInit {
       currency: 'USD',
       method: this.paymentMethod,
       intent: 'sale',
-      description: `ResumeAI ${plan.name} Subscription - ${plan.duration}`
+      description: `ResumeAI ${plan.name} Subscription - ${plan.duration}`,
+      planType: plan.id === 'monthly' ? 'MONTHLY' : 'YEARLY'
     };
 
     this.paymentService.initiatePayment(paymentRequest).subscribe(

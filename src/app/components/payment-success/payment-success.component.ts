@@ -1,9 +1,8 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthStateService } from '../../services/auth-state.service';
 import { PaymentService } from '../../services/payment.service';
-import { UserService } from '../../services/user.service';
 
 @Component({
   selector: 'app-payment-success',
@@ -14,10 +13,9 @@ import { UserService } from '../../services/user.service';
 })
 export class PaymentSuccessComponent implements OnInit, OnDestroy {
   private paymentService = inject(PaymentService);
-  private authService = inject(AuthService);
+  private authState = inject(AuthStateService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private userService = inject(UserService);
 
   showAnimation = true;
   verificationFailed = false;
@@ -33,15 +31,21 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       new URLSearchParams(window.location.search).get('paymentId');
 
     if (!paymentId) {
-      this.statusMessage = 'Payment confirmed!';
-      this.forceRelogin();
+      this.verificationFailed = true;
+      this.statusMessage = 'Payment reference is missing. Please contact support if you were charged.';
+      this.scheduleRedirect('/payment', 4000);
       return;
     }
 
     this.paymentService.verifyPayment(paymentId).subscribe({
-      next: () => {
-        this.statusMessage = 'Payment successful!';
-        this.forceRelogin(); // now delay is handled inside
+      next: (response) => {
+        this.authState.setAuthenticatedState({
+          token: response.token,
+          message: response.message,
+          user: response.user
+        });
+        this.statusMessage = 'Payment successful! Premium access is now active.';
+        this.scheduleRedirect('/dashboard', 1800);
       },
       error: () => {
         this.verificationFailed = true;
@@ -56,20 +60,7 @@ export class PaymentSuccessComponent implements OnInit, OnDestroy {
       clearTimeout(this.redirectTimeout);
     }
   }
-  private forceRelogin(): void {
-    // Step 1: show success message FIRST
-    this.statusMessage = 'Payment successful! Redirecting to login...';
 
-    // Step 2: wait 2 seconds BEFORE clearing session
-    this.redirectTimeout = setTimeout(() => {
-      // Clear everything AFTER delay
-      this.authService.logout();
-      sessionStorage.clear();
-
-      this.showAnimation = false;
-      this.router.navigate(['/login']);
-    }, 2000);
-  }
   private scheduleRedirect(path: string, delayMs: number): void {
     this.redirectTimeout = setTimeout(() => {
       this.showAnimation = false;
