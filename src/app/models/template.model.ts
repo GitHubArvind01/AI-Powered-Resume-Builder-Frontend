@@ -26,11 +26,13 @@ export interface UserProfile {
   role: string;
   active: boolean;
   subscriptionPlan: 'FREE' | 'MONTHLY' | 'YEARLY' | 'PRO' | string;
+  premiumActive?: boolean;
 }
 
 export interface AuthResponse {
   token: string;
   message?: string;
+  user?: UserProfile;
 }
 
 export interface JwtPayload {
@@ -99,11 +101,24 @@ export interface PaymentRequest {
   method: string;
   intent: string;
   description: string;
+  planType?: 'MONTHLY' | 'YEARLY';
 }
 
 export interface PaymentResponse {
   paymentLink: string;
   paymentId: string;
+}
+
+export interface PaymentVerificationResponse {
+  success: boolean;
+  message: string;
+  token: string;
+  user: UserProfile;
+  payment?: {
+    paymentId: string;
+    status: string;
+    planType?: string;
+  };
 }
 
 export enum UserPlan {

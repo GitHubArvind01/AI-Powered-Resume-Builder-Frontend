@@ -98,22 +98,19 @@ export class TemplatesComponent implements OnInit {
   }
 
   selectTemplate(template: Template): void {
-    // Check premium status first
     if (template.isPremium && this.currentUserPlan === UserPlan.FREE) {
       this.selectedTemplate = template;
       this.showUpgradeModal = true;
       return;
     }
 
-    // Set the ID for any UI loading indicators
-    this.selectingTemplateId = template.id;
-
-    // Navigate to the preview page
-    // We pass 'previewData' in state so the next component can load it immediately
-    this.router.navigate(['/resume-preview', template.id], {
+    const templateRouteId = this.resolveTemplateRouteId(template);
+    this.selectingTemplateId = templateRouteId;
+    this.router.navigate(['/resume-preview', templateRouteId], {
       state: {
-        templateId: template.id,
-        previewData: this.templates.find(t => t.id === template.id) // Pass the template object
+        templateId: templateRouteId,
+        templateName: template.name,
+        templateCategory: template.category
       }
     });
   }
@@ -141,6 +138,19 @@ export class TemplatesComponent implements OnInit {
   }
 
   isSelecting(template: Template): boolean {
-    return this.selectingTemplateId === template.id;
+    return this.selectingTemplateId === this.resolveTemplateRouteId(template);
+  }
+
+  private resolveTemplateRouteId(template: Template): string {
+    const name = template.name.trim().toLowerCase();
+    const category = template.category.trim().toLowerCase();
+
+    if (name.includes('minimal') || category.includes('minimal')) return 'minimalist';
+    if (name.includes('modern') || category.includes('modern')) return 'modern';
+    if (name.includes('professional') || category.includes('professional')) return 'professional';
+    if (name.includes('creative') || category.includes('creative')) return 'creative';
+    if (name.includes('executive') || category.includes('executive')) return 'executive';
+
+    return 'professional';
   }
 }

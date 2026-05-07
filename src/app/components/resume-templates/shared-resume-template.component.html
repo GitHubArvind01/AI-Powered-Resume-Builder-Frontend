@@ -1,0 +1,87 @@
+<div id="resume-a4-page" class="resume-a4-page" [ngClass]="'template-' + variant">
+  <header class="resume-header">
+    <div class="header-main">
+      <h1 [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.fullName', $event)">
+        {{ resume.personalInfo.fullName || 'Your Name' }}
+      </h1>
+      <p class="headline" [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.headline', $event)">
+        {{ resume.personalInfo.headline || 'Professional Headline' }}
+      </p>
+    </div>
+    <div class="contact-grid">
+      <span [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.email', $event)">{{ resume.personalInfo.email || 'email@example.com' }}</span>
+      <span [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.phone', $event)">{{ resume.personalInfo.phone || '+1 555 555 5555' }}</span>
+      <span [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.location', $event)">{{ resume.personalInfo.location || 'City, Country' }}</span>
+      <span [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.linkedin', $event)">{{ resume.personalInfo.linkedin || 'linkedin.com/in/username' }}</span>
+      <span [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.github', $event)">{{ resume.personalInfo.github || 'github.com/username' }}</span>
+      <span [attr.contenteditable]="editable" (input)="onFieldInput('personalInfo.portfolio', $event)">{{ resume.personalInfo.portfolio || 'portfolio.dev' }}</span>
+    </div>
+  </header>
+
+  <section class="resume-section">
+    <h2>Summary</h2>
+    <p class="summary-block" [attr.contenteditable]="editable" (input)="onFieldInput('summary', $event)">
+      {{ resume.summary || 'Write a strong summary tailored to the role you want.' }}
+    </p>
+  </section>
+
+  <section class="resume-section" *ngIf="resume.experience?.length">
+    <h2>Experience</h2>
+    <article class="resume-item" *ngFor="let item of resume.experience">
+      <div class="item-row">
+        <strong>{{ item.role || 'Role' }}</strong>
+        <span>{{ item.duration || 'Duration' }}</span>
+      </div>
+      <div class="company">{{ item.company || 'Company' }}</div>
+      <ul>
+        <li *ngFor="let highlight of item.highlights">{{ highlight }}</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="resume-section" *ngIf="resume.education?.length">
+    <h2>Education</h2>
+    <article class="resume-item" *ngFor="let item of resume.education">
+      <div class="item-row">
+        <strong>{{ item.degree || 'Degree' }}</strong>
+        <span>{{ item.year || 'Year' }}</span>
+      </div>
+      <div class="company">{{ item.institution || 'Institution' }}</div>
+    </article>
+  </section>
+
+  <section class="resume-section" *ngIf="resume.skills?.length">
+    <h2>Skills</h2>
+    <div class="chip-list">
+      <span class="chip" *ngFor="let skill of resume.skills">{{ skill }}</span>
+    </div>
+  </section>
+
+  <section class="resume-section" *ngIf="resume.projects?.length">
+    <h2>Projects</h2>
+    <article class="resume-item" *ngFor="let item of resume.projects">
+      <div class="item-row">
+        <strong>{{ item.name || 'Project' }}</strong>
+        <span>{{ item.link || '' }}</span>
+      </div>
+      <div>{{ item.description }}</div>
+    </article>
+  </section>
+
+  <section class="resume-section section-split">
+    <div>
+      <h2>Certifications</h2>
+      <div class="list-block" *ngFor="let item of resume.certifications ?? []; let i = index">
+        <div [attr.contenteditable]="editable" (input)="onListInput(i, 'certifications', $event)">{{ item || 'Certification' }}</div>
+      </div>
+      <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addListItem('certifications')">Add Certification</button>
+    </div>
+    <div>
+      <h2>Languages</h2>
+      <div class="list-block" *ngFor="let item of resume.languages ?? []; let i = index">
+        <div [attr.contenteditable]="editable" (input)="onListInput(i, 'languages', $event)">{{ item || 'Language' }}</div>
+      </div>
+      <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addListItem('languages')">Add Language</button>
+    </div>
+  </section>
+</div>
