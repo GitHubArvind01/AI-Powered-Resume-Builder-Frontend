@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 export type ExportFormat = 'pdf';
 
@@ -23,6 +25,37 @@ export class ExportService {
       }),
       responseType: 'blob'
     });
+  }
+
+  async exportElementToPdf(element: HTMLElement, fileName: string): Promise<void> {
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight
+    });
+
+    const imageData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const imageHeight = (canvas.height * pageWidth) / canvas.width;
+
+    pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, imageHeight, undefined, 'FAST');
+
+    let heightLeft = imageHeight - pageHeight;
+    let position = -pageHeight;
+
+    while (heightLeft > 0) {
+      pdf.addPage();
+      pdf.addImage(imageData, 'PNG', 0, position, pageWidth, imageHeight, undefined, 'FAST');
+      heightLeft -= pageHeight;
+      position -= pageHeight;
+    }
+
+    pdf.save(fileName);
   }
   downloadFile(blob: Blob, fileName: string): void {
     const url = window.URL.createObjectURL(blob);

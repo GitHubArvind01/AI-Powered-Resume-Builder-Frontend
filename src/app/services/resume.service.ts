@@ -46,6 +46,9 @@ export interface ResumeBuilderContent {
     phone: string;
     location: string;
     headline?: string;
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
   };
   summary: string;
   experience: Array<{
@@ -65,6 +68,8 @@ export interface ResumeBuilderContent {
     description: string;
     link?: string;
   }>;
+  certifications?: string[];
+  languages?: string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -309,7 +314,10 @@ export class ResumeService {
         email: '',
         phone: '',
         location: '',
-        headline: ''
+        headline: '',
+        linkedin: '',
+        github: '',
+        portfolio: ''
       },
       summary: '',
       experience: [
@@ -334,7 +342,9 @@ export class ResumeService {
           description: '',
           link: ''
         }
-      ]
+      ],
+      certifications: [],
+      languages: []
     } as ResumeBuilderContent;
   }
 
@@ -348,7 +358,10 @@ export class ResumeService {
         email: 'arvind@example.com',
         phone: '+91 98765 43210',
         location: 'Bhopal, India',
-        headline: 'Full Stack Java Developer'
+        headline: 'Full Stack Java Developer',
+        linkedin: 'linkedin.com/in/arvind-kumar',
+        github: 'github.com/arvind',
+        portfolio: 'arvind.dev'
       },
       summary: 'Experienced Full Stack Engineer with expertise in Spring Boot and Angular. Passionate about building scalable microservices and AI-driven applications.',
       experience: [
@@ -376,7 +389,9 @@ export class ResumeService {
           description: 'A microservices-based platform for creating ATS-friendly resumes[cite: 5].',
           link: 'https://github.com/arvind/resume-ai'
         }
-      ]
+      ],
+      certifications: ['AWS Certified Developer'],
+      languages: ['English', 'Hindi']
     };
   }
 }
