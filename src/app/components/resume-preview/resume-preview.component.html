@@ -1,11 +1,19 @@
 <div class="preview-wrapper" *ngIf="!isLoading">
   <header class="action-header">
     <div class="header-left">
-      <button class="back-btn" (click)="goBack()">← Back</button>
-      <span class="template-tag">Preview Mode: {{ templateId }}</span>
+      <button class="back-btn" (click)="goBack()">Back</button>
+      <span class="template-tag">{{ templateName }}</span>
     </div>
 
     <div class="header-actions">
+      <button class="action-btn format-btn" (click)="applyTextCommand('bold')">Bold</button>
+      <button class="action-btn format-btn" (click)="applyTextCommand('italic')">Italic</button>
+      <button class="action-btn format-btn" (click)="applyTextCommand('underline')">Underline</button>
+      <button class="action-btn format-btn" (click)="makeTextLarge()">A+</button>
+      <button class="action-btn format-btn" (click)="makeTextSmall()">A-</button>
+      <button class="action-btn ai-btn" (click)="improveSummary()" [disabled]="isImprovingSummary">
+        {{ isImprovingSummary ? 'Improving...' : 'Improve Summary' }}
+      </button>
       <button class="action-btn ats-btn" (click)="toggleAtsCheck()">ATS Check</button>
       <button class="action-btn export-btn" (click)="exportPDF()" [disabled]="isExporting">
         <span *ngIf="!isExporting">Export PDF</span>
@@ -18,26 +26,49 @@
   </header>
 
   <main class="preview-main">
-    <div id="resume-a4-page" class="resume-page" [ngClass]="'template-' + templateId">
-      <header class="page-header">
-        <h1 contenteditable="true" (blur)="onContentChange('personalInfo', 'fullName', $event)">
-          {{ resume.personalInfo.fullName || 'Full Name' }}
-        </h1>
-        <p class="contact-info">
-          <span contenteditable="true" (blur)="onContentChange('personalInfo', 'email', $event)">{{ resume.personalInfo.email || 'Email' }}</span> |
-          <span contenteditable="true" (blur)="onContentChange('personalInfo', 'phone', $event)">{{ resume.personalInfo.phone || 'Phone' }}</span>
-        </p>
-      </header>
+    <ng-container [ngSwitch]="templateId">
+      <app-minimalist-resume-template
+        *ngSwitchCase="'minimalist'"
+        [resume]="resume"
+        [editable]="true"
+        (resumeChange)="onResumeChange($event)">
+      </app-minimalist-resume-template>
 
-      <section class="page-section">
-        <h2 class="section-title">Summary</h2>
-        <p class="editable-area" contenteditable="true" (blur)="onContentChange('summary', null, $event)">
-          {{ resume.summary || 'Click to write your summary...' }}
-        </p>
-      </section>
+      <app-modern-resume-template
+        *ngSwitchCase="'modern'"
+        [resume]="resume"
+        [editable]="true"
+        (resumeChange)="onResumeChange($event)">
+      </app-modern-resume-template>
 
-      <!-- Section logic continues for Experience/Education following the same pattern -->
-    </div>
+      <app-professional-resume-template
+        *ngSwitchCase="'professional'"
+        [resume]="resume"
+        [editable]="true"
+        (resumeChange)="onResumeChange($event)">
+      </app-professional-resume-template>
+
+      <app-creative-resume-template
+        *ngSwitchCase="'creative'"
+        [resume]="resume"
+        [editable]="true"
+        (resumeChange)="onResumeChange($event)">
+      </app-creative-resume-template>
+
+      <app-executive-resume-template
+        *ngSwitchCase="'executive'"
+        [resume]="resume"
+        [editable]="true"
+        (resumeChange)="onResumeChange($event)">
+      </app-executive-resume-template>
+
+      <app-modern-resume-template
+        *ngSwitchDefault
+        [resume]="resume"
+        [editable]="true"
+        (resumeChange)="onResumeChange($event)">
+      </app-modern-resume-template>
+    </ng-container>
   </main>
 </div>
 

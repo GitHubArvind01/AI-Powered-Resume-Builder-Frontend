@@ -1,61 +1,107 @@
 .preview-wrapper {
-  background: #e2e8f0;
+  background: linear-gradient(180deg, #eef2ff 0%, #e2e8f0 100%);
   min-height: 100vh;
 }
 
 .action-header {
-  background: #1e293b;
+  background: #0f172a;
   color: white;
-  padding: 1rem 2rem;
+  padding: 1rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.header-actions {
+.header-left {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 12px;
 }
 
+.back-btn,
 .action-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
   border: none;
-  font-weight: bold;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 600;
   cursor: pointer;
 }
 
-.save-btn { background: #10b981; color: white; }
-.export-btn { background: #3b82f6; color: white; }
-.ats-btn { background: #f59e0b; color: white; }
+.back-btn {
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+}
+
+.template-tag {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.format-btn {
+  background: #334155;
+  color: white;
+}
+
+.ai-btn {
+  background: #8b5cf6;
+  color: white;
+}
+
+.save-btn {
+  background: #10b981;
+  color: white;
+}
+
+.export-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.ats-btn {
+  background: #f59e0b;
+  color: white;
+}
 
 .preview-main {
-  padding: 40px 0;
+  padding: 32px 16px 48px;
   display: flex;
   justify-content: center;
 }
 
-/* Standard A4 Sizing */
-.resume-page {
-  width: 210mm;
-  min-height: 297mm;
-  background: white;
-  padding: 20mm;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  transition: all 0.3s ease;
+.spinner-small {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-/* Highlight editable areas on hover */
-[contenteditable="true"]:hover {
-  outline: 1px dashed #3b82f6;
-  background: #f8fafc;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.section-title {
-  border-bottom: 2px solid #1e293b;
-  text-transform: uppercase;
-  margin-top: 20px;
+@media (max-width: 960px) {
+  .action-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
 }

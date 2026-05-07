@@ -4,12 +4,33 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ResumeService, ResumeBuilderContent } from '../../services/resume.service';
 import { ExportService } from '../../services/export.service';
 import { AtsCheckerComponent } from '../ats-checker/ats-checker.component';
-import { map } from 'rxjs/operators';
+import { MinimalistResumeTemplateComponent } from '../resume-templates/minimalist-resume-template.component';
+import { ModernResumeTemplateComponent } from '../resume-templates/modern-resume-template.component';
+import { ProfessionalResumeTemplateComponent } from '../resume-templates/professional-resume-template.component';
+import { CreativeResumeTemplateComponent } from '../resume-templates/creative-resume-template.component';
+import { ExecutiveResumeTemplateComponent } from '../resume-templates/executive-resume-template.component';
+import { AiService } from '../../services/ai.service';
+
+const TEMPLATE_COMPONENT_MAP = {
+  minimalist: MinimalistResumeTemplateComponent,
+  modern: ModernResumeTemplateComponent,
+  professional: ProfessionalResumeTemplateComponent,
+  creative: CreativeResumeTemplateComponent,
+  executive: ExecutiveResumeTemplateComponent
+} as const;
 
 @Component({
   selector: 'app-resume-preview',
   standalone: true,
-  imports: [CommonModule, AtsCheckerComponent],
+  imports: [
+    CommonModule,
+    AtsCheckerComponent,
+    MinimalistResumeTemplateComponent,
+    ModernResumeTemplateComponent,
+    ProfessionalResumeTemplateComponent,
+    CreativeResumeTemplateComponent,
+    ExecutiveResumeTemplateComponent
+  ],
   templateUrl: './resume-preview.component.html',
   styleUrl: './resume-preview.component.css'
 })
@@ -18,125 +39,183 @@ export class ResumePreviewComponent implements OnInit {
   private resumeService = inject(ResumeService);
   private exportService = inject(ExportService);
   private router = inject(Router);
+  private aiService = inject(AiService);
+
+  readonly templateComponentMap = TEMPLATE_COMPONENT_MAP;
 
   resume!: ResumeBuilderContent;
-  currentResumeId: string = '';
-  templateId: string = '';
+  currentResumeId = '';
+  templateId = 'modern';
+  templateName = 'Modern';
+  templateCategory = 'MODERN';
   isLoading = true;
   isSaving = false;
   isExporting = false;
   showAtsDrawer = false;
+  isImprovingSummary = false;
 
   ngOnInit(): void {
-    this.templateId = this.route.snapshot.params['templateId'];
-
-    // Check if data was passed from the TemplatesComponent click
-    const navigation = this.router.getCurrentNavigation();
-    if (navigation?.extras.state?.['previewData']) {
-      this.resume = navigation.extras.state['previewData'];
-      this.isLoading = false;
-    }
-
-    this.loadData(); // Still run this to sync with the latest backend version
+    this.templateId = this.normalizeTemplateId(this.route.snapshot.paramMap.get('templateId') || 'modern');
+    const navState = window.history.state ?? {};
+    this.templateName = navState.templateName || this.toTitleCase(this.templateId);
+    this.templateCategory = navState.templateCategory || this.templateId.toUpperCase();
+    this.resume = this.initializeDefaultContent(this.templateId);
+    this.isLoading = false;
   }
 
-  loadData(): void {
-    // Step 1: Get user resumes to find the latest one to edit
-    this.resumeService.getUserResumes().subscribe({
-      next: (resumes) => {
-        if (resumes.length > 0) {
-          const latest = resumes[0];
-          this.currentResumeId = latest.id;
-          this.resume = latest.content as ResumeBuilderContent;
-        } else {
-          // If no resume exists, initialize with default structure
-          // Note: Your service uses createEmptyResumeContent internally,
-          // we use a blank object here that matches ResumeBuilderContent
-          this.resume = this.initializeDefaultContent();
-        }
-        this.isLoading = false;
+  initializeDefaultContent(templateId: string): ResumeBuilderContent {
+    const demo = this.resumeService.createFreshTemplateData(templateId);
+    return {
+      templateId,
+      personalInfo: {
+        fullName: demo.personalInfo.fullName || '',
+        email: demo.personalInfo.email || '',
+        phone: demo.personalInfo.phone || '',
+        location: demo.personalInfo.location || '',
+        headline: demo.personalInfo.headline || '',
+        linkedin: demo.personalInfo.linkedin || '',
+        github: demo.personalInfo.github || '',
+        portfolio: demo.personalInfo.portfolio || ''
       },
-      error: (err) => {
-        console.error('Failed to load resume:', err);
-        this.isLoading = false;
+      summary: demo.summary || '',
+      experience: demo.experience || [],
+      education: demo.education || [],
+      skills: demo.skills || [],
+      projects: demo.projects || [],
+      certifications: demo.certifications || [],
+      languages: demo.languages || []
+    };
+  }
+
+  onResumeChange(updatedResume: ResumeBuilderContent): void {
+    this.resume = {
+      ...updatedResume,
+      templateId: this.templateId
+    };
+  }
+
+  improveSummary(): void {
+    if (!this.resume.summary?.trim()) {
+      alert('Please write a summary first.');
+      return;
+    }
+
+    this.isImprovingSummary = true;
+    this.aiService.improveContent({
+      text: this.resume.summary,
+      type: 'summary',
+      action: 'improve',
+      resumeId: this.currentResumeId || null
+    }).subscribe({
+      next: (response) => {
+        this.resume.summary = response.improvedText || this.resume.summary;
+        this.isImprovingSummary = false;
+      },
+      error: () => {
+        this.isImprovingSummary = false;
+        alert('Could not improve summary right now.');
       }
     });
   }
 
-  // Handle direct A4 page edits
-  onContentChange(section: string, field: string | null, event: any): void {
-    const value = event.target.innerText;
-    if (section === 'personalInfo' && field) {
-      (this.resume.personalInfo as any)[field] = value;
-    } else if (section === 'summary') {
-      this.resume.summary = value;
-    }
-  }
-
   saveResume(): void {
+    this.isSaving = true;
+
+    const payload = {
+      title: this.resume.personalInfo?.fullName?.trim()
+        ? `${this.resume.personalInfo.fullName} Resume`
+        : `${this.templateName || this.templateId} Resume`,
+      templateId: this.templateId,
+      content: {
+        ...this.resume,
+        templateId: this.templateId
+      }
+    };
+
     if (!this.currentResumeId) {
-      // Create new if it doesn't exist
-      this.resumeService.createResume({
-        title: 'New Resume',
-        templateId: this.templateId,
-        content: this.resume
-      }).subscribe(res => {
-        this.currentResumeId = res.id;
-        alert('Resume Created!');
+      this.resumeService.createResume(payload).subscribe({
+        next: (res) => {
+          this.currentResumeId = res.id;
+          this.isSaving = false;
+        },
+        error: () => {
+          this.isSaving = false;
+        }
       });
       return;
     }
 
-    this.isSaving = true;
-    this.resumeService.updateResume(this.currentResumeId, {
-      title: 'Updated Resume',
-      content: this.resume
-    }).subscribe({
+    this.resumeService.updateResume(this.currentResumeId, payload).subscribe({
       next: () => {
         this.isSaving = false;
-        alert('Saved Successfully!');
       },
-      error: () => this.isSaving = false
-    });
-  }
-
-  exportPDF(): void {
-    if (!this.currentResumeId) {
-      alert('Please save your resume first before exporting.');
-      return;
-    }
-
-    this.isExporting = true;
-    this.exportService.exportAsPdf(this.currentResumeId).subscribe({
-      next: (blob: Blob) => {
-        const fileName = this.exportService.generateFileName('My_Resume', 'pdf');
-        this.exportService.downloadFile(blob, fileName);
-        this.isExporting = false;
-      },
-      error: (err) => {
-        console.error('Export failed:', err);
-        this.isExporting = false;
+      error: () => {
+        this.isSaving = false;
       }
     });
   }
 
+  async exportPDF(): Promise<void> {
+    const element = document.getElementById('resume-a4-page');
+    if (!element) {
+      alert('Resume preview not found.');
+      return;
+    }
+
+    this.isExporting = true;
+    try {
+      const fileName = this.exportService.generateFileName(
+        `${this.resume.personalInfo?.fullName || 'resume'}_${this.templateName || this.templateId}`,
+        'pdf'
+      );
+      await this.exportService.exportElementToPdf(element, fileName);
+    } finally {
+      this.isExporting = false;
+    }
+  }
+
   toggleAtsCheck(): void {
+    if (!this.currentResumeId) {
+      alert('Please save this resume first before running ATS check.');
+      return;
+    }
+
     this.showAtsDrawer = !this.showAtsDrawer;
+  }
+
+  applyTextCommand(command: 'bold' | 'italic' | 'underline' | 'fontSize', value?: string): void {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      return;
+    }
+
+    document.execCommand(command, false, value);
+  }
+
+  makeTextLarge(): void {
+    this.applyTextCommand('fontSize', '5');
+  }
+
+  makeTextSmall(): void {
+    this.applyTextCommand('fontSize', '3');
   }
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
   }
 
-  private initializeDefaultContent(): ResumeBuilderContent {
-    return {
-      templateId: this.templateId,
-      personalInfo: { fullName: '', email: '', phone: '', location: '', headline: '' },
-      summary: '',
-      experience: [],
-      education: [],
-      skills: [],
-      projects: []
-    };
+  private normalizeTemplateId(rawTemplateId: string): string {
+    const normalized = rawTemplateId.trim().toLowerCase();
+    if (normalized === 'minimal') {
+      return 'minimalist';
+    }
+    return normalized;
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
   }
 }
