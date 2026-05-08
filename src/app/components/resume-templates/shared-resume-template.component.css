@@ -1,25 +1,29 @@
 .resume-a4-page {
   width: 210mm;
-  min-height: 297mm;
+  height: 297mm;
+  overflow: hidden;
   margin: 0 auto;
   background: #fff;
-  padding: 16mm;
+  padding: 14mm;
+  box-sizing: border-box;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
   color: #0f172a;
-  box-sizing: border-box;
 }
 
 .resume-header {
-  margin-bottom: 12mm;
+  margin-bottom: 9mm;
 }
 
-.header-main h1 {
-  margin: 0 0 4px;
+.header-main {
+  margin-bottom: 8px;
+}
+
+.resume-name {
   font-size: 28px;
+  font-weight: 700;
 }
 
-.headline {
-  margin: 0;
+.resume-headline {
   font-size: 14px;
 }
 
@@ -27,39 +31,42 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px 12px;
-  margin-top: 10px;
-  font-size: 12px;
 }
 
 .resume-section {
-  margin-bottom: 9mm;
+  margin-bottom: 7mm;
 }
 
 .resume-section h2 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
-.summary-block {
-  margin: 0;
-  line-height: 1.6;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
 .resume-item {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.item-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+.item-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
 }
 
-.company {
-  margin: 4px 0;
-  font-style: italic;
+.company-input {
+  margin-top: 6px;
+}
+
+.nested-list {
+  margin-top: 6px;
 }
 
 .chip-list {
@@ -68,10 +75,8 @@
   gap: 8px;
 }
 
-.chip {
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
+.chip-input {
+  width: calc(50% - 4px);
 }
 
 .section-split {
@@ -80,26 +85,62 @@
   gap: 18px;
 }
 
-.list-block {
+.resume-input,
+.resume-textarea {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  box-sizing: border-box;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: normal;
+}
+
+.resume-textarea {
+  min-height: 44px;
+  resize: none;
+  line-height: 1.5;
+}
+
+.summary-block {
+  min-height: 72px;
+}
+
+.bullet-textarea {
+  min-height: 38px;
+}
+
+.list-input {
   margin-bottom: 8px;
 }
 
-[contenteditable="true"] {
-  border-radius: 4px;
+.resume-input:focus,
+.resume-textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.06);
 }
 
-[contenteditable="true"]:hover,
-[contenteditable="true"]:focus {
-  outline: 1px dashed #3b82f6;
-  background: rgba(59, 130, 246, 0.06);
+.resume-input[readonly],
+.resume-textarea[readonly] {
+  pointer-events: none;
 }
 
 .mini-add-btn {
   border: 1px solid #cbd5e1;
   background: #fff;
-  padding: 6px 10px;
+  padding: 5px 10px;
   border-radius: 999px;
   cursor: pointer;
+  font-size: 11px;
+}
+
+.mini-inline {
+  margin-top: 6px;
 }
 
 .template-minimalist {
@@ -112,11 +153,6 @@
   padding-bottom: 4px;
 }
 
-.template-minimalist .chip {
-  background: #f3f4f6;
-  color: #111827;
-}
-
 .template-modern {
   font-family: 'Trebuchet MS', Arial, sans-serif;
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
@@ -124,17 +160,12 @@
 }
 
 .template-modern .resume-header {
-  padding-bottom: 8mm;
+  padding-bottom: 6mm;
   border-bottom: 2px solid #ccfbf1;
 }
 
 .template-modern .resume-section h2 {
   color: #0f766e;
-}
-
-.template-modern .chip {
-  background: #ccfbf1;
-  color: #115e59;
 }
 
 .template-professional {
@@ -146,11 +177,6 @@
   color: #1e3a8a;
   border-bottom: 2px solid #bfdbfe;
   padding-bottom: 4px;
-}
-
-.template-professional .chip {
-  background: #dbeafe;
-  color: #1e3a8a;
 }
 
 .template-creative {
@@ -166,11 +192,6 @@
   color: #c2410c;
 }
 
-.template-creative .chip {
-  background: #ffedd5;
-  color: #9a3412;
-}
-
 .template-executive {
   font-family: Cambria, Georgia, serif;
   background: #fcfcfc;
@@ -178,11 +199,6 @@
 }
 
 .template-executive .resume-section h2 {
-  color: #334155;
-}
-
-.template-executive .chip {
-  background: #e2e8f0;
   color: #334155;
 }
 
