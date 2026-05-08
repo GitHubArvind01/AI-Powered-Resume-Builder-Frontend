@@ -29,31 +29,22 @@ export class ExportService {
 
   async exportElementToPdf(element: HTMLElement, fileName: string): Promise<void> {
     const canvas = await html2canvas(element, {
-      scale: 2,
+      scale: 2.5,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight
+      windowWidth: Math.ceil(element.scrollWidth),
+      windowHeight: Math.ceil(element.scrollHeight)
     });
 
     const imageData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const imageHeight = (canvas.height * pageWidth) / canvas.width;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
 
-    pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, imageHeight, undefined, 'FAST');
-
-    let heightLeft = imageHeight - pageHeight;
-    let position = -pageHeight;
-
-    while (heightLeft > 0) {
-      pdf.addPage();
-      pdf.addImage(imageData, 'PNG', 0, position, pageWidth, imageHeight, undefined, 'FAST');
-      heightLeft -= pageHeight;
-      position -= pageHeight;
-    }
+    // Template preview export is single-page A4 by design, so we fit exactly one page
+    // and avoid floating-point overflow that creates a blank trailing page.
+    pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
 
     pdf.save(fileName);
   }
