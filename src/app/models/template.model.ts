@@ -13,6 +13,9 @@ export interface Resume {
   id: string;
   title: string;
   templateId: string;
+  templateName?: string;
+  templateType?: string;
+  source?: 'TEMPLATE' | 'EDITOR' | string;
   content: any;
   createdAt: Date;
   updatedAt: Date;
