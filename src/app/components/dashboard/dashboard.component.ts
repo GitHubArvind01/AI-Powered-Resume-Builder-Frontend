@@ -160,8 +160,20 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/payment']);
   }
   // Resume Actions
-  editResume(resumeId: string): void {
-    this.router.navigate([`/resume/${resumeId}/edit`]);
+  editResume(resume: Resume): void {
+    if (resume.source === 'TEMPLATE' && resume.templateId) {
+      this.router.navigate(['/resume-preview', resume.templateId], {
+        queryParams: { resumeId: resume.id },
+        state: {
+          templateId: resume.templateId,
+          templateName: resume.templateName,
+          templateCategory: resume.templateType
+        }
+      });
+      return;
+    }
+
+    this.router.navigate([`/resume/${resume.id}/edit`]);
   }
 
   deleteResume(resumeId: string): void {
@@ -177,7 +189,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  downloadResume(resumeId: string): void {
-    this.router.navigate([`/resume/${resumeId}/edit`]);
+  downloadResume(resume: Resume): void {
+    this.editResume(resume);
   }
 }
