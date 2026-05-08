@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ResumeBuilderContent } from '../../services/resume.service';
 
 @Component({
   selector: 'app-shared-resume-template',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './shared-resume-template.component.html',
   styleUrl: './shared-resume-template.component.css'
 })
@@ -15,31 +16,63 @@ export class SharedResumeTemplateComponent {
   @Input() variant: 'minimalist' | 'modern' | 'professional' | 'creative' | 'executive' = 'modern';
   @Output() resumeChange = new EventEmitter<ResumeBuilderContent>();
 
-  onFieldInput(path: string, event: Event): void {
-    const target = event.target as HTMLElement;
-    this.setValue(path, target.innerText.trim());
-    this.resumeChange.emit(this.resume);
+  trackByIndex(index: number): number {
+    return index;
   }
 
-  onListInput(index: number, key: 'certifications' | 'languages', event: Event): void {
-    const target = event.target as HTMLElement;
-    const values = [...(this.resume[key] ?? [])];
-    values[index] = target.innerText.trim();
-    this.resume[key] = values.filter((value) => value?.trim());
-    this.resumeChange.emit(this.resume);
+  emitChange(): void {
+    this.resumeChange.emit({
+      ...this.resume,
+      personalInfo: { ...this.resume.personalInfo },
+      experience: [...this.resume.experience],
+      education: [...this.resume.education],
+      skills: [...this.resume.skills],
+      projects: [...this.resume.projects],
+      certifications: [...(this.resume.certifications ?? [])],
+      languages: [...(this.resume.languages ?? [])]
+    });
+  }
+
+  addExperience(): void {
+    this.resume.experience.push({
+      company: '',
+      role: '',
+      duration: '',
+      highlights: ['']
+    });
+    this.emitChange();
+  }
+
+  addExperienceHighlight(experienceIndex: number): void {
+    this.resume.experience[experienceIndex].highlights.push('');
+    this.emitChange();
+  }
+
+  addEducation(): void {
+    this.resume.education.push({
+      institution: '',
+      degree: '',
+      year: ''
+    });
+    this.emitChange();
+  }
+
+  addSkill(): void {
+    this.resume.skills.push('');
+    this.emitChange();
+  }
+
+  addProject(): void {
+    this.resume.projects.push({
+      name: '',
+      description: '',
+      link: ''
+    });
+    this.emitChange();
   }
 
   addListItem(key: 'certifications' | 'languages'): void {
     this.resume[key] = [...(this.resume[key] ?? []), ''];
-    this.resumeChange.emit(this.resume);
-  }
-
-  private setValue(path: string, value: string): void {
-    const keys = path.split('.');
-    let current: any = this.resume;
-    for (let index = 0; index < keys.length - 1; index += 1) {
-      current = current[keys[index]];
-    }
-    current[keys[keys.length - 1]] = value;
+    this.emitChange();
   }
 }
