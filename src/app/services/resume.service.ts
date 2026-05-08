@@ -40,6 +40,9 @@ export interface AtsCheckResult {
 
 export interface ResumeBuilderContent {
   templateId: string;
+  templateName?: string;
+  templateType?: string;
+  source?: 'TEMPLATE' | 'EDITOR' | string;
   personalInfo: {
     fullName: string;
     email: string;
@@ -123,9 +126,13 @@ export class ResumeService {
   }
 
   createResume(data: { title: string; templateId: string; content?: any }): Observable<Resume> {
+    const content = {
+      ...(data.content ?? this.createEmptyResumeContent(data.templateId)),
+      templateId: data.templateId
+    };
     const payload = {
       title: data.title,
-      content: JSON.stringify(data.content ?? this.createEmptyResumeContent(data.templateId)),
+      content: JSON.stringify(content),
       isPublic: false,
       status: 'DRAFT',
       description: `Resume created with ${data.templateId} template`
@@ -138,9 +145,13 @@ export class ResumeService {
 
   updateResume(id: string, data: any): Observable<Resume> {
     const { title, content, ...rest } = data;
+    const payloadContent = {
+      ...(content ?? rest),
+      templateId: data.templateId ?? content?.templateId ?? rest?.templateId ?? 'professional'
+    };
     const payload = {
       title: title ?? 'My Resume',
-      content: JSON.stringify(content ?? rest),
+      content: JSON.stringify(payloadContent),
       isPublic: false,
       status: 'DRAFT',
       description: 'Updated from editor'
@@ -285,6 +296,9 @@ export class ResumeService {
       id: String(resume.id),
       title: resume.title,
       templateId: parsedContent.templateId || 'professional',
+      templateName: parsedContent.templateName,
+      templateType: parsedContent.templateType,
+      source: parsedContent.source,
       content: parsedContent,
       createdAt: new Date(resume.createdAt),
       updatedAt: new Date(resume.updatedAt)
@@ -309,6 +323,9 @@ export class ResumeService {
   private createEmptyResumeContent(templateId: string): any {
     return {
       templateId,
+      templateName: this.toTitleCase(templateId),
+      templateType: templateId.toUpperCase(),
+      source: 'EDITOR',
       personalInfo: {
         fullName: '',
         email: '',
@@ -353,6 +370,9 @@ export class ResumeService {
   public createFreshTemplateData(templateId: string): ResumeBuilderContent {
     return {
       templateId,
+      templateName: this.toTitleCase(templateId),
+      templateType: templateId.toUpperCase(),
+      source: 'TEMPLATE',
       personalInfo: {
         fullName: 'Arvind Kumar', // Placeholder data
         email: 'arvind@example.com',
@@ -393,5 +413,12 @@ export class ResumeService {
       certifications: ['AWS Certified Developer'],
       languages: ['English', 'Hindi']
     };
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
   }
 }
