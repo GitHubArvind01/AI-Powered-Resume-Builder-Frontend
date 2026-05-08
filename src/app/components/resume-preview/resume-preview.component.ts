@@ -59,6 +59,13 @@ export class ResumePreviewComponent implements OnInit {
     const navState = window.history.state ?? {};
     this.templateName = navState.templateName || this.toTitleCase(this.templateId);
     this.templateCategory = navState.templateCategory || this.templateId.toUpperCase();
+    const resumeId = this.route.snapshot.queryParamMap.get('resumeId');
+
+    if (resumeId) {
+      this.loadSavedTemplateResume(resumeId);
+      return;
+    }
+
     this.resume = this.initializeDefaultContent(this.templateId);
     this.isLoading = false;
   }
@@ -67,6 +74,9 @@ export class ResumePreviewComponent implements OnInit {
     const demo = this.resumeService.createFreshTemplateData(templateId);
     return {
       templateId,
+      templateName: this.templateName,
+      templateType: this.templateCategory,
+      source: 'TEMPLATE',
       personalInfo: {
         fullName: demo.personalInfo.fullName || '',
         email: demo.personalInfo.email || '',
@@ -128,7 +138,10 @@ export class ResumePreviewComponent implements OnInit {
       templateId: this.templateId,
       content: {
         ...this.resume,
-        templateId: this.templateId
+        templateId: this.templateId,
+        templateName: this.templateName,
+        templateType: this.templateCategory,
+        source: 'TEMPLATE'
       }
     };
 
@@ -183,25 +196,33 @@ export class ResumePreviewComponent implements OnInit {
     this.showAtsDrawer = !this.showAtsDrawer;
   }
 
-  applyTextCommand(command: 'bold' | 'italic' | 'underline' | 'fontSize', value?: string): void {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      return;
-    }
-
-    document.execCommand(command, false, value);
-  }
-
-  makeTextLarge(): void {
-    this.applyTextCommand('fontSize', '5');
-  }
-
-  makeTextSmall(): void {
-    this.applyTextCommand('fontSize', '3');
-  }
-
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  private loadSavedTemplateResume(resumeId: string): void {
+    this.isLoading = true;
+    this.resumeService.getResumeById(resumeId).subscribe({
+      next: (resume) => {
+        this.currentResumeId = resume.id;
+        this.templateId = this.normalizeTemplateId(resume.templateId || this.templateId);
+        this.templateName = resume.templateName || this.templateName;
+        this.templateCategory = resume.templateType || this.templateCategory;
+        this.resume = {
+          ...this.initializeDefaultContent(this.templateId),
+          ...resume.content,
+          templateId: this.templateId,
+          templateName: this.templateName,
+          templateType: this.templateCategory,
+          source: 'TEMPLATE'
+        };
+        this.isLoading = false;
+      },
+      error: () => {
+        this.resume = this.initializeDefaultContent(this.templateId);
+        this.isLoading = false;
+      }
+    });
   }
 
   private normalizeTemplateId(rawTemplateId: string): string {
