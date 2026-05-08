@@ -6,11 +6,6 @@
     </div>
 
     <div class="header-actions">
-      <button class="action-btn format-btn" (click)="applyTextCommand('bold')">Bold</button>
-      <button class="action-btn format-btn" (click)="applyTextCommand('italic')">Italic</button>
-      <button class="action-btn format-btn" (click)="applyTextCommand('underline')">Underline</button>
-      <button class="action-btn format-btn" (click)="makeTextLarge()">A+</button>
-      <button class="action-btn format-btn" (click)="makeTextSmall()">A-</button>
       <button class="action-btn ai-btn" (click)="improveSummary()" [disabled]="isImprovingSummary">
         {{ isImprovingSummary ? 'Improving...' : 'Improve Summary' }}
       </button>
