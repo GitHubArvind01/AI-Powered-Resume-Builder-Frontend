@@ -427,3 +427,47 @@ button:disabled {
     width: 100%;
   }
 }
+
+/* Paste all your provided CSS here */
+.users-shell {
+  display: grid;
+  gap: 20px;
+  min-height: 100%;
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+}
+
+.users-header h2,
+.table-header h3,
+.modal-header h3,
+.activity h4,
+.payment-management h4 {
+  margin: 0;
+}
+
+/* ADD THIS SPECIFIC BLOCK FOR THE NEW SECTION */
+.payment-management {
+  margin-top: 4px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #f0f7ff;
+  border: 1px solid #e0e7ff;
+  display: grid;
+  gap: 16px;
+}
+
+.payment-management h4 {
+  color: #1e40af;
+  font-size: 1rem;
+}
+
+/* Reusing your form styles for the payment section */
+.payment-management label {
+  display: grid;
+  gap: 8px;
+}

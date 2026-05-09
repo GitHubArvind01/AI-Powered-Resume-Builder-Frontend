@@ -31,54 +31,52 @@
     <div *ngIf="!isLoading" class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Plan</th>
-            <th>Status</th>
-            <th>Resumes</th>
-            <th class="action-col">Action</th>
-          </tr>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Resumes</th>
+          <th class="action-col">Action</th>
+        </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let user of filteredUsers">
-            <td>{{ user.fullName }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.role }}</td>
-            <td>{{ user.subscriptionPlan }}</td>
-            <td>
-              <span class="status" [class.inactive]="!user.active">
-                {{ user.active ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td>{{ user.resumeCount }}</td>
-            <td class="action-col">
-              <button
-                type="button"
-                class="primary-btn"
-                [disabled]="isDetailLoading || currentAction !== null"
-                (click)="openUserModal(user.id)"
-              >
-                <span *ngIf="!(isDetailLoading && selectedUser?.id === user.id)">View</span>
-                <span *ngIf="isDetailLoading && selectedUser?.id === user.id" class="inline-loader"></span>
-              </button>
-            </td>
-          </tr>
-          <tr *ngIf="!filteredUsers.length">
-            <td colspan="7" class="empty-row">No users match this search.</td>
-          </tr>
+        <tr *ngFor="let user of filteredUsers">
+          <td>{{ user.fullName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.role }}</td>
+          <td>{{ user.subscriptionPlan }}</td>
+          <td>
+            <span class="status" [class.inactive]="!user.active">
+              {{ user.active ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td>{{ user.resumeCount }}</td>
+          <td class="action-col">
+            <button
+              type="button"
+              class="primary-btn"
+              [disabled]="isDetailLoading || currentAction !== null"
+              (click)="openUserModal(user.id)"
+            >
+              <span *ngIf="!(isDetailLoading && selectedUser?.id === user.id)">View</span>
+              <span *ngIf="isDetailLoading && selectedUser?.id === user.id" class="inline-loader"></span>
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="!filteredUsers.length">
+          <td colspan="7" class="empty-row">No users match this search.</td>
+        </tr>
         </tbody>
       </table>
     </div>
   </section>
 </section>
 
-<div
-  *ngIf="isModalOpen"
-  class="modal-backdrop"
-  (click)="closeModal()"
->
+<div *ngIf="isModalOpen" class="modal-backdrop" (click)="closeModal()">
   <section class="modal-panel" (click)="$event.stopPropagation()">
     <button
       type="button"
@@ -87,7 +85,7 @@
       (click)="closeModal()"
       aria-label="Close user details"
     >
-      x
+      ×
     </button>
 
     <div *ngIf="isDetailLoading" class="modal-state">
@@ -102,6 +100,7 @@
           <h3>{{ selectedUser.fullName }}</h3>
           <p>{{ selectedUser.email }}</p>
         </div>
+
         <span class="status" [class.inactive]="!selectedUser.active">
           {{ selectedUser.active ? 'Active' : 'Inactive' }}
         </span>
@@ -133,13 +132,16 @@
           </label>
 
           <label>
-            <span>Plan</span>
+            <span>Assign Plan</span>
             <select name="subscriptionPlan" [(ngModel)]="form.subscriptionPlan" required>
               <option value="FREE">FREE</option>
-              <option value="PRO">PRO</option>
               <option value="MONTHLY">MONTHLY</option>
               <option value="YEARLY">YEARLY</option>
             </select>
+
+            <small class="muted">
+              Dates, status and premium access are auto-managed by backend.
+            </small>
           </label>
         </div>
 
@@ -148,26 +150,62 @@
           <span>Account is active</span>
         </label>
 
+        <section class="payment-management">
+          <h4>Subscription Overview</h4>
+
+          <div class="two-col">
+            <div>
+              <p class="eyebrow">Current Plan</p>
+              <strong>{{ selectedUser.subscriptionPlan || 'FREE' }}</strong>
+            </div>
+
+            <div>
+              <p class="eyebrow">Subscription Status</p>
+              <strong>{{ selectedUser.subscriptionStatus || 'INACTIVE' }}</strong>
+            </div>
+
+            <div>
+              <p class="eyebrow">Started On</p>
+              <strong>
+                {{ selectedUser.subscriptionStartDate ? (selectedUser.subscriptionStartDate | date:'mediumDate') : '—' }}
+              </strong>
+            </div>
+
+            <div>
+              <p class="eyebrow">Expires On</p>
+              <strong>
+                {{ selectedUser.subscriptionEndDate ? (selectedUser.subscriptionEndDate | date:'mediumDate') : '—' }}
+              </strong>
+            </div>
+          </div>
+        </section>
+
         <section class="activity">
           <h4>Activity</h4>
-          <p>Joined {{ selectedUser.createdAt | date: 'mediumDate' }}</p>
+          <p>Joined {{ selectedUser.createdAt | date:'mediumDate' }}</p>
           <p>Total resumes: {{ selectedUser.resumeCount }}</p>
-          <div class="resume-list" *ngIf="selectedUser.resumes.length; else noResumes">
+
+          <div class="resume-list" *ngIf="selectedUser.resumes?.length; else noResumes">
             <article *ngFor="let resume of selectedUser.resumes">
               <div>
                 <strong>{{ resume.title }}</strong>
                 <span>{{ resume.status || 'DRAFT' }}</span>
               </div>
-              <small>{{ resume.updatedAt | date: 'mediumDate' }}</small>
+              <small>{{ resume.updatedAt | date:'mediumDate' }}</small>
             </article>
           </div>
+
           <ng-template #noResumes>
             <p class="muted">No resumes created yet.</p>
           </ng-template>
         </section>
 
         <div class="actions">
-          <button type="submit" class="primary-btn" [disabled]="isSaving || userForm.invalid || currentAction !== null">
+          <button
+            type="submit"
+            class="primary-btn"
+            [disabled]="isSaving || userForm.invalid || currentAction !== null"
+          >
             <span *ngIf="!isActionLoading('save', selectedUser.id)">Save Changes</span>
             <span *ngIf="isActionLoading('save', selectedUser.id)" class="inline-loader"></span>
           </button>
