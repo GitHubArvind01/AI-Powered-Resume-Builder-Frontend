@@ -1,103 +1,33 @@
+/* =========================================
+   BASE A4 PAGE STYLES & RESETS
+   ========================================= */
 .resume-a4-page {
   width: 210mm;
-  height: 297mm;
-  overflow: hidden;
+  min-height: 297mm;
   margin: 0 auto;
   background: #fff;
-  padding: 14mm;
   box-sizing: border-box;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
   color: #0f172a;
+  overflow: hidden;
+  position: relative;
 }
 
-.resume-header {
-  margin-bottom: 9mm;
+.resume-layout {
+  min-height: 297mm;
 }
 
-.header-main {
-  margin-bottom: 8px;
-}
-
-.resume-name {
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.resume-headline {
-  font-size: 14px;
-}
-
-.contact-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 12px;
-}
-
-.resume-section {
-  margin-bottom: 7mm;
-}
-
-.resume-section h2 {
-  margin: 0;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.resume-item {
-  margin-bottom: 8px;
-}
-
-.item-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-}
-
-.company-input {
-  margin-top: 6px;
-}
-
-.nested-list {
-  margin-top: 6px;
-}
-
-.chip-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.chip-input {
-  width: calc(50% - 4px);
-}
-
-.section-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
-.resume-input,
-.resume-textarea {
+/* Base Form Inputs */
+.resume-input, .resume-textarea {
   width: 100%;
   border: 1px solid transparent;
   background: transparent;
   padding: 4px 6px;
-  border-radius: 6px;
+  border-radius: 4px;
   font: inherit;
   color: inherit;
   box-sizing: border-box;
-  direction: ltr;
-  text-align: left;
-  unicode-bidi: normal;
+  transition: all 0.2s ease;
 }
 
 .resume-textarea {
@@ -106,105 +36,327 @@
   line-height: 1.5;
 }
 
-.summary-block {
-  min-height: 72px;
-}
-
-.bullet-textarea {
-  min-height: 38px;
-}
-
-.list-input {
-  margin-bottom: 8px;
-}
-
-.resume-input:focus,
-.resume-textarea:focus {
+.resume-input:focus, .resume-textarea:focus {
   outline: none;
-  border-color: #60a5fa;
-  background: rgba(96, 165, 250, 0.06);
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(96, 165, 250, 0.05);
 }
 
-.resume-input[readonly],
-.resume-textarea[readonly] {
-  pointer-events: none;
-}
-
+.resume-input[readonly], .resume-textarea[readonly] { pointer-events: none; }
+.fw-bold { font-weight: 700; }
+.text-right { text-align: right; }
 .mini-add-btn {
   border: 1px solid #cbd5e1;
   background: #fff;
-  padding: 5px 10px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 11px;
+  color: #475569;
 }
+.mini-add-btn:hover { background: #f1f5f9; }
 
-.mini-inline {
-  margin-top: 6px;
+/* Sections & Typography */
+.resume-section h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0;
 }
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.resume-item { margin-bottom: 12px; }
+.item-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+.nested-list { margin-top: 4px; padding-left: 12px; border-left: 2px solid #e2e8f0; }
 
+/* =========================================
+   1. MINIMALIST TEMPLATE (Standard A4 Layout)
+   ========================================= */
+
+/* Fixed Class Name: Targets "template-minimalist" to match "Minimalist Pro" */
 .template-minimalist {
-  font-family: Arial, Helvetica, sans-serif;
-  border-top: 3px solid #111827;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 15mm 20mm; /* Standard A4 breathing room */
+}
+
+/* Flexbox column layout */
+.template-minimalist .resume-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+/* MAGIC FIX: This "unwraps" the sidebar and main div structurally,
+   allowing us to reorder their children into one perfect column. */
+.template-minimalist .resume-sidebar,
+.template-minimalist .resume-main {
+  display: contents;
+}
+
+/* --- Standard Resume Ordering --- */
+.template-minimalist .resume-header { order: 1; border-bottom: 1px solid #e2e8f0; padding-bottom: 6mm; margin-bottom: 6mm; }
+.template-minimalist .resume-main > .resume-section:nth-of-type(1) { order: 2; } /* Summary */
+.template-minimalist .resume-main > .resume-section:nth-of-type(2) { order: 3; } /* Experience */
+.template-minimalist .resume-main > .resume-section:nth-of-type(3) { order: 4; } /* Education */
+.template-minimalist .resume-main > .resume-section:nth-of-type(4) { order: 5; } /* Projects */
+.template-minimalist .resume-sidebar > .resume-section:nth-of-type(1) { order: 6; } /* Skills */
+.template-minimalist .resume-sidebar > .resume-section:nth-of-type(2) { order: 7; } /* Certifications */
+.template-minimalist .resume-sidebar > .resume-section:nth-of-type(3) { order: 8; } /* Languages */
+
+
+/* HEADER & CONTACTS */
+.template-minimalist .resume-header .header-main {
+  text-align: center;
+}
+
+.template-minimalist .resume-name {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-align: center;
+  color: #0f172a;
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.template-minimalist .resume-headline {
+  font-size: 15px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 500;
+  padding: 0;
+}
+
+.template-minimalist .contact-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  margin-top: 10px;
+}
+
+.template-minimalist .contact-grid input {
+  width: auto;
+  min-width: 100px;
+  text-align: center;
+  font-size: 13px;
+  color: #475569;
+}
+
+
+/* SECTION HEADERS */
+.template-minimalist .resume-section {
+  margin-bottom: 6mm;
+  width: 100%;
 }
 
 .template-minimalist .resume-section h2 {
-  border-bottom: 1px solid #d1d5db;
-  padding-bottom: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
 }
 
-.template-modern {
-  font-family: 'Trebuchet MS', Arial, sans-serif;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  border-left: 10px solid #0f766e;
-}
 
-.template-modern .resume-header {
-  padding-bottom: 6mm;
-  border-bottom: 2px solid #ccfbf1;
-}
-
-.template-modern .resume-section h2 {
-  color: #0f766e;
-}
-
-.template-professional {
-  font-family: Georgia, 'Times New Roman', serif;
-  border-top: 8px solid #1d4ed8;
-}
-
-.template-professional .resume-section h2 {
-  color: #1e3a8a;
-  border-bottom: 2px solid #bfdbfe;
-  padding-bottom: 4px;
-}
-
-.template-creative {
-  font-family: 'Gill Sans', 'Trebuchet MS', sans-serif;
-  background:
-    radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 24%),
-    radial-gradient(circle at left center, rgba(14, 165, 233, 0.12), transparent 22%),
-    #fffdf8;
-  border: 2px solid #fdba74;
-}
-
-.template-creative .resume-section h2 {
-  color: #c2410c;
-}
-
-.template-executive {
-  font-family: Cambria, Georgia, serif;
-  background: #fcfcfc;
-  border-left: 14px solid #334155;
-}
-
-.template-executive .resume-section h2 {
+/* TEXT AREAS & BODY */
+.template-minimalist .summary-block {
+  font-size: 13.5px;
+  line-height: 1.6;
   color: #334155;
 }
 
+.template-minimalist .resume-item {
+  margin-bottom: 14px;
+}
+
+.template-minimalist .item-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.template-minimalist .item-grid .fw-bold {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.template-minimalist .item-grid .text-right {
+  font-size: 13px;
+  color: #64748b;
+  text-align: right;
+}
+
+.template-minimalist .company-input {
+  font-size: 13.5px;
+  color: #475569;
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+
+/* BULLET POINTS (Simulated for textareas) */
+.template-minimalist .nested-list {
+  border-left: none;
+  padding-left: 14px;
+  margin-top: 4px;
+  position: relative;
+}
+
+.template-minimalist .nested-list::before {
+  content: '•';
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.template-minimalist .bullet-textarea {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #334155;
+  min-height: 24px;
+}
+
+
+/* SKILLS (Clean inline chips) */
+.template-minimalist .chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.template-minimalist .chip-input {
+  width: auto;
+  min-width: 80px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 13px;
+  padding: 6px 12px;
+  text-align: center;
+  color: #334155;
+}
+
+
+/* LISTS (Certs & Languages) */
+.template-minimalist .list-input {
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 4px;
+  padding-left: 0;
+  width: 100%;
+}
+
+
+/* INPUT HOVER/FOCUS POLISH */
+.template-minimalist .resume-input:focus,
+.template-minimalist .resume-textarea:focus {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* PRINT OPTIMIZATION */
 @media print {
-  .resume-a4-page {
-    box-shadow: none;
-    margin: 0;
-  }
+  .template-minimalist { padding: 12mm 15mm; }
+  .template-minimalist .resume-item,
+  .template-minimalist .resume-section { page-break-inside: avoid; }
+}
+/* =========================================
+   2. PROFESSIONAL TEMPLATE (Single Column, Traditional)
+   ========================================= */
+.template-professional {
+  font-family: 'Merriweather', Georgia, serif;
+  padding: 14mm;
+  border-top: 8px solid #1e3a8a;
+}
+.template-professional .resume-layout { flex-direction: column; }
+.template-professional .resume-sidebar { margin-bottom: 6mm; border-bottom: 2px solid #1e3a8a; padding-bottom: 6mm; }
+.template-professional .resume-name { font-size: 28px; font-weight: 700; color: #1e3a8a; }
+.template-professional .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 10px; }
+.template-professional .resume-section h2 { color: #1e3a8a; border-bottom: 1px solid #bfdbfe; padding-bottom: 4px; margin-bottom: 10px; }
+.template-professional .chip-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+
+/* =========================================
+   3. MODERN TEMPLATE (Two-Column, Sidebar Accent)
+   ========================================= */
+.template-modern {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+.template-modern .resume-layout { display: grid; grid-template-columns: 70mm 1fr; }
+.template-modern .resume-sidebar {
+  background: #0f172a; /* Dark Navy Sidebar */
+  color: #f8fafc;
+  padding: 14mm 8mm;
+}
+.template-modern .resume-main { padding: 14mm; background: #ffffff; }
+.template-modern .resume-name { font-size: 26px; font-weight: 700; color: #ffffff; padding-left: 0; }
+.template-modern .resume-headline { color: #94a3b8; padding-left: 0; margin-bottom: 8mm;}
+.template-modern .contact-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8mm; }
+.template-modern .resume-sidebar .resume-input { color: #f8fafc; } /* Fix dark text on dark background */
+.template-modern .resume-sidebar .resume-input:focus { background: rgba(255,255,255,0.1); border-color: #38bdf8; }
+.template-modern .resume-sidebar h2 { color: #38bdf8; border-bottom: 1px solid #334155; padding-bottom: 4px; margin-bottom: 12px; }
+.template-modern .resume-main h2 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 12px; }
+.template-modern .chip-list { display: flex; flex-direction: column; gap: 4px; }
+
+/* =========================================
+   4. CREATIVE TEMPLATE (Two-Column, Bold Accents)
+   ========================================= */
+.template-creative {
+  font-family: 'Poppins', 'Trebuchet MS', sans-serif;
+}
+.template-creative .resume-layout { display: grid; grid-template-columns: 1fr 2fr; }
+.template-creative .resume-sidebar {
+  background: #fdf4ff;
+  border-right: 2px dashed #f0abfc;
+  padding: 14mm 8mm;
+}
+.template-creative .resume-main { padding: 14mm; }
+.template-creative .resume-name { font-size: 28px; font-weight: 800; color: #a21caf; }
+.template-creative .resume-headline { font-weight: 600; color: #d946ef; margin-bottom: 6mm;}
+.template-creative .contact-grid { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6mm; }
+.template-creative h2 { color: #86198f; background: #fae8ff; display: inline-block; padding: 4px 10px; border-radius: 4px; margin-bottom: 12px; }
+.template-creative .chip-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.template-creative .chip-input { background: #fff; border: 1px solid #f0abfc; border-radius: 12px; width: auto; min-width: 80px; }
+.template-creative .nested-list { border-left: 3px solid #f0abfc; }
+
+/* =========================================
+   5. EXECUTIVE TEMPLATE (Single Column, Robust)
+   ========================================= */
+.template-executive {
+  font-family: 'Times New Roman', Times, serif;
+  padding: 14mm 18mm;
+  background: #fcfcfc;
+}
+.template-executive .resume-layout { flex-direction: column; }
+.template-executive .resume-sidebar { text-align: center; margin-bottom: 6mm; }
+.template-executive .resume-name { font-size: 34px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #000; padding-bottom: 4px; }
+.template-executive .resume-headline { font-size: 14px; font-style: italic; margin-top: 4px; }
+.template-executive .contact-grid { display: flex; justify-content: center; gap: 12px; margin-top: 8px; font-size: 13px; }
+.template-executive .contact-grid input { width: auto; text-align: center; }
+.template-executive .resume-section h2 { border-bottom: 2px solid #334155; color: #334155; font-weight: bold; margin-bottom: 12px; padding-bottom: 2px; }
+.template-executive .chip-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.template-executive .chip-input { width: calc(25% - 10px); border-bottom: 1px dotted #94a3b8; border-radius: 0; }
+
+/* Print Overrides */
+@media print {
+  .resume-a4-page { box-shadow: none; margin: 0; min-height: 100vh; }
+  .template-modern .resume-sidebar { background: #0f172a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .template-creative .resume-sidebar { background: #fdf4ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }

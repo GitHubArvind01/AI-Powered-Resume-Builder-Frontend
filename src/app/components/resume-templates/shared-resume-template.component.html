@@ -1,136 +1,104 @@
-<div id="resume-a4-page" class="resume-a4-page" [ngClass]="'template-' + variant">
-  <header class="resume-header">
-    <div class="header-main">
-      <input
-        class="resume-input resume-name"
-        [(ngModel)]="resume.personalInfo.fullName"
-        [ngModelOptions]="{ standalone: true }"
-        (ngModelChange)="emitChange()"
-        [readonly]="!editable"
-        placeholder="Your Name">
+<div id="resume-a4-page" class="resume-a4-page" [ngClass]="'template-' + (variant | lowercase)">
+  <div class="resume-layout">
 
-      <input
-        class="resume-input resume-headline"
-        [(ngModel)]="resume.personalInfo.headline"
-        [ngModelOptions]="{ standalone: true }"
-        (ngModelChange)="emitChange()"
-        [readonly]="!editable"
-        placeholder="Professional Headline">
-    </div>
+    <!-- SIDEBAR / SECONDARY SECTION -->
+    <aside class="resume-sidebar">
+      <header class="resume-header">
+        <div class="header-main">
+          <input class="resume-input resume-name" [(ngModel)]="resume.personalInfo.fullName" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Your Name">
+          <input class="resume-input resume-headline" [(ngModel)]="resume.personalInfo.headline" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Professional Headline">
+        </div>
 
-    <div class="contact-grid">
-      <input class="resume-input" [(ngModel)]="resume.personalInfo.email" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="email@example.com">
-      <input class="resume-input" [(ngModel)]="resume.personalInfo.phone" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="+1 555 555 5555">
-      <input class="resume-input" [(ngModel)]="resume.personalInfo.location" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="City, Country">
-      <input class="resume-input" [(ngModel)]="resume.personalInfo.linkedin" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="linkedin.com/in/username">
-      <input class="resume-input" [(ngModel)]="resume.personalInfo.github" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="github.com/username">
-      <input class="resume-input" [(ngModel)]="resume.personalInfo.portfolio" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="portfolio.dev">
-    </div>
-  </header>
+        <div class="contact-grid">
+          <input class="resume-input" [(ngModel)]="resume.personalInfo.email" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="email@example.com">
+          <input class="resume-input" [(ngModel)]="resume.personalInfo.phone" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="+1 555 555 5555">
+          <input class="resume-input" [(ngModel)]="resume.personalInfo.location" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="City, Country">
+          <input class="resume-input" [(ngModel)]="resume.personalInfo.linkedin" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="linkedin.com/in/username">
+          <input class="resume-input" [(ngModel)]="resume.personalInfo.github" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="github.com/username">
+          <input class="resume-input" [(ngModel)]="resume.personalInfo.portfolio" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="portfolio.dev">
+        </div>
+      </header>
 
-  <section class="resume-section">
-    <h2>Summary</h2>
-    <textarea
-      class="resume-textarea summary-block"
-      [(ngModel)]="resume.summary"
-      [ngModelOptions]="{ standalone: true }"
-      (ngModelChange)="emitChange()"
-      [readonly]="!editable"
-      placeholder="Write a strong summary tailored to the role you want."></textarea>
-  </section>
+      <section class="resume-section">
+        <div class="section-header">
+          <h2>Skills</h2>
+          <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addSkill()">Add</button>
+        </div>
+        <div class="chip-list">
+          <input class="resume-input chip-input" *ngFor="let skill of resume.skills; let i = index; trackBy: trackByIndex" [(ngModel)]="resume.skills[i]" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Skill">
+        </div>
+      </section>
 
-  <section class="resume-section">
-    <div class="section-header">
-      <h2>Experience</h2>
-      <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addExperience()">Add</button>
-    </div>
-    <article class="resume-item" *ngFor="let item of resume.experience; let i = index; trackBy: trackByIndex">
-      <div class="item-grid">
-        <input class="resume-input" [(ngModel)]="item.role" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Role">
-        <input class="resume-input" [(ngModel)]="item.duration" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Duration">
-      </div>
-      <input class="resume-input company-input" [(ngModel)]="item.company" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Company">
-      <div class="nested-list" *ngFor="let highlight of item.highlights; let j = index; trackBy: trackByIndex">
-        <textarea class="resume-textarea bullet-textarea" [(ngModel)]="item.highlights[j]" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Achievement or impact bullet"></textarea>
-      </div>
-      <button *ngIf="editable" type="button" class="mini-add-btn mini-inline" (click)="addExperienceHighlight(i)">Add Bullet</button>
-    </article>
-  </section>
+      <section class="resume-section">
+        <div class="section-header">
+          <h2>Certifications</h2>
+          <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addListItem('certifications')">Add</button>
+        </div>
+        <input class="resume-input list-input" *ngFor="let item of resume.certifications ?? []; let i = index; trackBy: trackByIndex" [(ngModel)]="resume.certifications![i]" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Certification">
+      </section>
 
-  <section class="resume-section">
-    <div class="section-header">
-      <h2>Education</h2>
-      <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addEducation()">Add</button>
-    </div>
-    <article class="resume-item" *ngFor="let item of resume.education; let i = index; trackBy: trackByIndex">
-      <div class="item-grid">
-        <input class="resume-input" [(ngModel)]="item.degree" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Degree">
-        <input class="resume-input" [(ngModel)]="item.year" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Year">
-      </div>
-      <input class="resume-input company-input" [(ngModel)]="item.institution" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Institution">
-    </article>
-  </section>
+      <section class="resume-section">
+        <div class="section-header">
+          <h2>Languages</h2>
+          <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addListItem('languages')">Add</button>
+        </div>
+        <input class="resume-input list-input" *ngFor="let item of resume.languages ?? []; let i = index; trackBy: trackByIndex" [(ngModel)]="resume.languages![i]" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Language">
+      </section>
+    </aside>
 
-  <section class="resume-section">
-    <div class="section-header">
-      <h2>Skills</h2>
-      <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addSkill()">Add</button>
-    </div>
-    <div class="chip-list">
-      <input
-        class="resume-input chip-input"
-        *ngFor="let skill of resume.skills; let i = index; trackBy: trackByIndex"
-        [(ngModel)]="resume.skills[i]"
-        [ngModelOptions]="{ standalone: true }"
-        (ngModelChange)="emitChange()"
-        [readonly]="!editable"
-        placeholder="Skill">
-    </div>
-  </section>
+    <!-- MAIN CONTENT SECTION -->
+    <main class="resume-main">
+      <section class="resume-section">
+        <h2>Summary</h2>
+        <textarea class="resume-textarea summary-block" [(ngModel)]="resume.summary" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Write a strong summary tailored to the role you want."></textarea>
+      </section>
 
-  <section class="resume-section">
-    <div class="section-header">
-      <h2>Projects</h2>
-      <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addProject()">Add</button>
-    </div>
-    <article class="resume-item" *ngFor="let item of resume.projects; let i = index; trackBy: trackByIndex">
-      <div class="item-grid">
-        <input class="resume-input" [(ngModel)]="item.name" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Project">
-        <input class="resume-input" [(ngModel)]="item.link" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Link">
-      </div>
-      <textarea class="resume-textarea" [(ngModel)]="item.description" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Project description"></textarea>
-    </article>
-  </section>
+      <section class="resume-section">
+        <div class="section-header">
+          <h2>Experience</h2>
+          <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addExperience()">Add</button>
+        </div>
+        <article class="resume-item" *ngFor="let item of resume.experience; let i = index; trackBy: trackByIndex">
+          <div class="item-grid">
+            <input class="resume-input fw-bold" [(ngModel)]="item.role" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Role">
+            <input class="resume-input text-right" [(ngModel)]="item.duration" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Duration">
+          </div>
+          <input class="resume-input company-input" [(ngModel)]="item.company" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Company">
+          <div class="nested-list" *ngFor="let highlight of item.highlights; let j = index; trackBy: trackByIndex">
+            <textarea class="resume-textarea bullet-textarea" [(ngModel)]="item.highlights[j]" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Achievement or impact bullet"></textarea>
+          </div>
+          <button *ngIf="editable" type="button" class="mini-add-btn mini-inline" (click)="addExperienceHighlight(i)">Add Bullet</button>
+        </article>
+      </section>
 
-  <section class="resume-section section-split">
-    <div>
-      <div class="section-header">
-        <h2>Certifications</h2>
-        <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addListItem('certifications')">Add</button>
-      </div>
-      <input
-        class="resume-input list-input"
-        *ngFor="let item of resume.certifications ?? []; let i = index; trackBy: trackByIndex"
-        [(ngModel)]="resume.certifications![i]"
-        [ngModelOptions]="{ standalone: true }"
-        (ngModelChange)="emitChange()"
-        [readonly]="!editable"
-        placeholder="Certification">
-    </div>
+      <section class="resume-section">
+        <div class="section-header">
+          <h2>Education</h2>
+          <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addEducation()">Add</button>
+        </div>
+        <article class="resume-item" *ngFor="let item of resume.education; let i = index; trackBy: trackByIndex">
+          <div class="item-grid">
+            <input class="resume-input fw-bold" [(ngModel)]="item.degree" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Degree">
+            <input class="resume-input text-right" [(ngModel)]="item.year" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Year">
+          </div>
+          <input class="resume-input company-input" [(ngModel)]="item.institution" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Institution">
+        </article>
+      </section>
 
-    <div>
-      <div class="section-header">
-        <h2>Languages</h2>
-        <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addListItem('languages')">Add</button>
-      </div>
-      <input
-        class="resume-input list-input"
-        *ngFor="let item of resume.languages ?? []; let i = index; trackBy: trackByIndex"
-        [(ngModel)]="resume.languages![i]"
-        [ngModelOptions]="{ standalone: true }"
-        (ngModelChange)="emitChange()"
-        [readonly]="!editable"
-        placeholder="Language">
-    </div>
-  </section>
+      <section class="resume-section">
+        <div class="section-header">
+          <h2>Projects</h2>
+          <button *ngIf="editable" type="button" class="mini-add-btn" (click)="addProject()">Add</button>
+        </div>
+        <article class="resume-item" *ngFor="let item of resume.projects; let i = index; trackBy: trackByIndex">
+          <div class="item-grid">
+            <input class="resume-input fw-bold" [(ngModel)]="item.name" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Project Name">
+            <input class="resume-input text-right" [(ngModel)]="item.link" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Link">
+          </div>
+          <textarea class="resume-textarea" [(ngModel)]="item.description" [ngModelOptions]="{ standalone: true }" (ngModelChange)="emitChange()" [readonly]="!editable" placeholder="Project description"></textarea>
+        </article>
+      </section>
+    </main>
+
+  </div>
 </div>
