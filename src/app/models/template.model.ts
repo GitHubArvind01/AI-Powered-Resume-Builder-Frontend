@@ -6,7 +6,7 @@ export interface Template {
   isPremium: boolean;
   isFavorite?: boolean;
   category: string;
-  previewData?: any; // Realistic placeholder resume content for editor pre-population
+  previewData?: any;
 }
 
 export interface Resume {
@@ -28,8 +28,17 @@ export interface UserProfile {
   phone?: string;
   role: string;
   active: boolean;
-  subscriptionPlan: 'FREE' | 'MONTHLY' | 'YEARLY' | 'PRO' | string;
+  subscriptionPlan:
+    | 'FREE'
+    | 'MONTHLY'
+    | 'YEARLY'
+    | 'PRO'
+    | string;
   premiumActive?: boolean;
+  subscriptionStatus?: string;
+  subscriptionStartDate?: string;
+  subscriptionEndDate?: string;
+  paymentStatus?: string;
 }
 
 export interface AuthResponse {
@@ -77,6 +86,11 @@ export interface AdminUserDetails {
   createdAt: string;
   resumeCount: number;
   resumes: AdminResume[];
+  premiumActive?: boolean;
+  subscriptionStatus?: string;
+  subscriptionStartDate?: string;
+  subscriptionEndDate?: string;
+  paymentStatus?: string;
 }
 
 export interface AdminDashboardStats {
