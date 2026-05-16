@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ResumeService, ResumeBuilderContent } from '../../services/resume.service';
-import { ExportService } from '../../services/export.service';
+import { ExportService, TemplateEditorMode, TemplateExportRequest } from '../../services/export.service';
 import { AtsCheckerComponent } from '../ats-checker/ats-checker.component';
 import { MinimalistResumeTemplateComponent } from '../resume-templates/minimalist-resume-template.component';
 import { ModernResumeTemplateComponent } from '../resume-templates/modern-resume-template.component';
@@ -53,6 +53,9 @@ export class ResumePreviewComponent implements OnInit {
   isExporting = false;
   showAtsDrawer = false;
   isImprovingSummary = false;
+  editorMode: TemplateEditorMode = 'edit';
+  statusMessage = '';
+  statusTone: 'success' | 'error' | 'info' = 'info';
 
   ngOnInit(): void {
     this.templateId = this.normalizeTemplateId(this.route.snapshot.paramMap.get('templateId') || 'modern');
@@ -130,74 +133,70 @@ export class ResumePreviewComponent implements OnInit {
 
   saveResume(): void {
     this.isSaving = true;
-
-    const payload = {
-      title: this.resume.personalInfo?.fullName?.trim()
-        ? `${this.resume.personalInfo.fullName} Resume`
-        : `${this.templateName || this.templateId} Resume`,
-      templateId: this.templateId,
-      content: {
-        ...this.resume,
-        templateId: this.templateId,
-        templateName: this.templateName,
-        templateType: this.templateCategory,
-        source: 'TEMPLATE'
-      }
-    };
-
-    if (!this.currentResumeId) {
-      this.resumeService.createResume(payload).subscribe({
-        next: (res) => {
-          this.currentResumeId = res.id;
-          this.isSaving = false;
-        },
-        error: () => {
-          this.isSaving = false;
-        }
-      });
-      return;
-    }
-
-    this.resumeService.updateResume(this.currentResumeId, payload).subscribe({
+    this.persistResume().subscribe({
       next: () => {
         this.isSaving = false;
+        this.setStatus('Template resume saved.', 'success');
       },
       error: () => {
         this.isSaving = false;
+        this.setStatus('Could not save the template resume.', 'error');
       }
     });
   }
 
-  async exportPDF(): Promise<void> {
-    const element = document.getElementById('resume-a4-page');
-    if (!element) {
-      alert('Resume preview not found.');
-      return;
-    }
-
+  exportPDF(): void {
     this.isExporting = true;
-    try {
-      const fileName = this.exportService.generateFileName(
-        `${this.resume.personalInfo?.fullName || 'resume'}_${this.templateName || this.templateId}`,
-        'pdf'
-      );
-      await this.exportService.exportElementToPdf(element, fileName);
-    } finally {
-      this.isExporting = false;
-    }
+    const request = this.buildTemplateExportRequest();
+
+    this.exportService.exportTemplateAsPdf(request).subscribe({
+      next: (blob) => {
+        const fileName = this.exportService.generateFileName(
+          `resume-template-${this.templateName || this.templateId}`,
+          'pdf'
+        );
+        this.exportService.downloadFile(blob, fileName);
+        this.isExporting = false;
+        this.setStatus('Template PDF exported from backend.', 'success');
+      },
+      error: () => {
+        this.isExporting = false;
+        this.setStatus('Template PDF export failed.', 'error');
+      }
+    });
   }
 
   toggleAtsCheck(): void {
-    if (!this.currentResumeId) {
-      alert('Please save this resume first before running ATS check.');
+    if (this.showAtsDrawer) {
+      this.showAtsDrawer = false;
       return;
     }
 
-    this.showAtsDrawer = !this.showAtsDrawer;
+    if (this.currentResumeId) {
+      this.showAtsDrawer = true;
+      return;
+    }
+
+    this.isSaving = true;
+    this.persistResume().subscribe({
+      next: () => {
+        this.isSaving = false;
+        this.showAtsDrawer = true;
+        this.setStatus('Template saved and ready for ATS check.', 'success');
+      },
+      error: () => {
+        this.isSaving = false;
+        this.setStatus('Save the template resume before running ATS check.', 'error');
+      }
+    });
   }
 
   goBack(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  setEditorMode(mode: TemplateEditorMode): void {
+    this.editorMode = mode;
   }
 
   private loadSavedTemplateResume(resumeId: string): void {
@@ -223,6 +222,77 @@ export class ResumePreviewComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private persistResume() {
+    const payload = this.buildResumePayload();
+    if (!this.currentResumeId) {
+      return this.resumeService.createResume(payload);
+    }
+    return this.resumeService.updateResume(this.currentResumeId, payload);
+  }
+
+  private buildResumePayload() {
+    return {
+      title: this.resume.personalInfo?.fullName?.trim()
+        ? `${this.resume.personalInfo.fullName} Resume`
+        : `${this.templateName || this.templateId} Resume`,
+      templateId: this.templateId,
+      content: {
+        ...this.resume,
+        templateId: this.templateId,
+        templateName: this.templateName,
+        templateType: this.templateCategory,
+        source: 'TEMPLATE'
+      }
+    };
+  }
+
+  private buildTemplateExportRequest(): TemplateExportRequest {
+    return {
+      templateId: this.templateId,
+      templateName: this.templateName,
+      editorMode: 'preview',
+      resumeData: {
+        templateId: this.templateId,
+        templateName: this.templateName,
+        templateType: this.templateCategory,
+        source: 'TEMPLATE'
+        ,
+        personalInfo: { ...this.resume.personalInfo },
+        summary: this.resume.summary,
+        experience: this.resume.experience.map((item) => ({
+          title: item.role,
+          subtitle: item.company,
+          dateRange: item.duration,
+          bullets: [...item.highlights]
+        })),
+        education: this.resume.education.map((item) => ({
+          title: item.degree,
+          subtitle: item.institution,
+          dateRange: item.year
+        })),
+        skills: [...this.resume.skills],
+        projects: this.resume.projects.map((item) => ({
+          title: item.name,
+          description: item.description,
+          link: item.link
+        })),
+        certifications: [...(this.resume.certifications ?? [])],
+        languages: [...(this.resume.languages ?? [])]
+      },
+      styleConfig: {
+        variant: this.templateId,
+        theme: this.templateCategory,
+        singlePage: true,
+        compactSpacing: true
+      }
+    };
+  }
+
+  private setStatus(message: string, tone: 'success' | 'error' | 'info'): void {
+    this.statusMessage = message;
+    this.statusTone = tone;
   }
 
   private normalizeTemplateId(rawTemplateId: string): string {

@@ -3,6 +3,10 @@
     <div class="header-left">
       <button class="back-btn" (click)="goBack()">Back</button>
       <span class="template-tag">{{ templateName }}</span>
+      <div class="mode-switch">
+        <button class="mode-btn" [class.active]="editorMode === 'edit'" (click)="setEditorMode('edit')">Edit</button>
+        <button class="mode-btn" [class.active]="editorMode === 'preview'" (click)="setEditorMode('preview')">Preview</button>
+      </div>
     </div>
 
     <div class="header-actions">
@@ -20,12 +24,17 @@
     </div>
   </header>
 
+  <div class="status-banner" *ngIf="statusMessage" [ngClass]="statusTone">
+    {{ statusMessage }}
+  </div>
+
   <main class="preview-main">
     <ng-container [ngSwitch]="templateId">
       <app-minimalist-resume-template
         *ngSwitchCase="'minimalist'"
         [resume]="resume"
         [editable]="true"
+        [mode]="editorMode"
         (resumeChange)="onResumeChange($event)">
       </app-minimalist-resume-template>
 
@@ -33,6 +42,7 @@
         *ngSwitchCase="'modern'"
         [resume]="resume"
         [editable]="true"
+        [mode]="editorMode"
         (resumeChange)="onResumeChange($event)">
       </app-modern-resume-template>
 
@@ -40,6 +50,7 @@
         *ngSwitchCase="'professional'"
         [resume]="resume"
         [editable]="true"
+        [mode]="editorMode"
         (resumeChange)="onResumeChange($event)">
       </app-professional-resume-template>
 
@@ -47,6 +58,7 @@
         *ngSwitchCase="'creative'"
         [resume]="resume"
         [editable]="true"
+        [mode]="editorMode"
         (resumeChange)="onResumeChange($event)">
       </app-creative-resume-template>
 
@@ -54,6 +66,7 @@
         *ngSwitchCase="'executive'"
         [resume]="resume"
         [editable]="true"
+        [mode]="editorMode"
         (resumeChange)="onResumeChange($event)">
       </app-executive-resume-template>
 
@@ -61,6 +74,7 @@
         *ngSwitchDefault
         [resume]="resume"
         [editable]="true"
+        [mode]="editorMode"
         (resumeChange)="onResumeChange($event)">
       </app-modern-resume-template>
     </ng-container>
