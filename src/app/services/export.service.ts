@@ -2,10 +2,53 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import { ResumeBuilderContent } from './resume.service';
 
 export type ExportFormat = 'pdf';
+export type TemplateEditorMode = 'edit' | 'preview';
+
+export interface TemplateSectionData {
+  title: string;
+  subtitle?: string;
+  dateRange?: string;
+  description?: string;
+  location?: string;
+  link?: string;
+  bullets?: string[];
+  metadata?: Record<string, string>;
+}
+
+export interface TemplateStyleConfig {
+  variant: string;
+  theme?: string;
+  accentColor?: string;
+  fontFamily?: string;
+  compactSpacing?: boolean;
+  singlePage?: boolean;
+}
+
+export interface TemplateExportRequest {
+  templateId: string;
+  templateName: string;
+  editorMode: TemplateEditorMode;
+  resumeData: TemplateResumePayload;
+  styleConfig: TemplateStyleConfig;
+}
+
+export interface TemplateResumePayload {
+  templateId: string;
+  templateName?: string;
+  templateType?: string;
+  source?: string;
+  personalInfo: ResumeBuilderContent['personalInfo'];
+  summary: string;
+  experience: TemplateSectionData[];
+  education: TemplateSectionData[];
+  skills: string[];
+  projects: TemplateSectionData[];
+  certifications?: string[];
+  languages?: string[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class ExportService {
@@ -27,27 +70,16 @@ export class ExportService {
     });
   }
 
-  async exportElementToPdf(element: HTMLElement, fileName: string): Promise<void> {
-    const canvas = await html2canvas(element, {
-      scale: 2.5,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: Math.ceil(element.scrollWidth),
-      windowHeight: Math.ceil(element.scrollHeight)
+  exportTemplateAsPdf(request: TemplateExportRequest): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/template/pdf`, request, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        Accept: 'application/pdf'
+      }),
+      responseType: 'blob'
     });
-
-    const imageData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    // Template preview export is single-page A4 by design, so we fit exactly one page
-    // and avoid floating-point overflow that creates a blank trailing page.
-    pdf.addImage(imageData, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
-
-    pdf.save(fileName);
   }
+
   downloadFile(blob: Blob, fileName: string): void {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
