@@ -45,6 +45,13 @@ export class AuthComponent implements OnInit {
     });
   }
 
+  //this method has two jobs - Remove non-numbers || Limit to 10 digits
+  onPhoneInput(): void {
+    this.authData.phone = this.authData.phone
+      .replace(/[^0-9]/g, '')
+      .slice(0, 10);
+  }
+
   // --- Main Actions ---
 
     onSubmit(form: any) {

@@ -55,15 +55,28 @@
 
         <div class="f-group" *ngIf="!isLoginMode">
           <label>Phone Number</label>
+
           <input
             type="tel"
             [(ngModel)]="authData.phone"
             name="phone"
             required
+            pattern="^[6-9][0-9]{9}$"
+            maxlength="10"
+            inputmode="numeric"
+            autocomplete="tel"
             #phone="ngModel"
             [class.invalid]="phone.invalid && phone.touched"
+            (input)="onPhoneInput()"
           />
-          <small *ngIf="phone.invalid && phone.touched">Phone number is required</small>
+
+          <small *ngIf="phone.errors?.['required'] && phone.touched">
+            Phone number is required
+          </small>
+
+          <small *ngIf="phone.errors?.['pattern'] && phone.touched">
+            Enter valid 10 digit phone number starting with 6-9
+          </small>
         </div>
 
         <div class="toast-wrapper" *ngIf="errorMessage || successMessage">
